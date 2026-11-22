@@ -22,6 +22,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip wrongJumpClip;
     public AudioClip level1ClickClip;
     public AudioClip level2ClickClip;
+    public AudioClip level3ClickClip;
     public AudioClip levelLockedClip;
     public AudioClip levelCompleteClip;
     public AudioClip buttonClickClip;
@@ -58,6 +59,7 @@ public class AudioManager : MonoBehaviour
         if (wrongJumpClip == null) wrongJumpClip = Resources.Load<AudioClip>("Audio/WrongJump");
         if (level1ClickClip == null) level1ClickClip = Resources.Load<AudioClip>("Audio/Level1Click");
         if (level2ClickClip == null) level2ClickClip = Resources.Load<AudioClip>("Audio/Level2Click");
+        if (level3ClickClip == null) level3ClickClip = Resources.Load<AudioClip>("Audio/Level3Click");
         if (levelLockedClip == null) levelLockedClip = Resources.Load<AudioClip>("Audio/LevelLocked");
         if (levelCompleteClip == null) levelCompleteClip = Resources.Load<AudioClip>("Audio/LevelComplete");
         if (buttonClickClip == null) buttonClickClip = Resources.Load<AudioClip>("Audio/ButtonClick");
@@ -85,6 +87,12 @@ public class AudioManager : MonoBehaviour
     {
         LoadClipsIfNeeded();
         PlayClip(level2ClickClip, 1.0f);
+    }
+
+    public void PlayLevel3Click()
+    {
+        LoadClipsIfNeeded();
+        PlayClip(level3ClickClip, 1.0f);
     }
 
     public void PlayLevelLocked()

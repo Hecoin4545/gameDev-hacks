@@ -229,6 +229,7 @@ public class LevelManager : MonoBehaviour
         {
             string currentScene = SceneManager.GetActiveScene().name;
             if (currentScene == "Level1") SceneManager.LoadScene("Level2");
+            else if (currentScene == "Level2") SceneManager.LoadScene("Level3");
             else SceneManager.LoadScene("MainMenu");
         }
     }

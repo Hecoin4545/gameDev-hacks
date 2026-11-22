@@ -31,17 +31,24 @@ MonoBehaviour:
   - {x: 3, y: 3}
   - {x: 4, y: 2}
   - {x: 5, y: 4}
-  objective: Study the mirrored PATH MAP, then hop across the dark tiles and reach the golden finish island.
+  objective: Study the mirrored PATH BLUEPRINT, then hop across the safe tiles to reach the golden finish island.
   instructions: 'WASD / Arrows - Move
 
     Space - Jump
 
     Mouse Drag / Q E - Rotate camera
 
-    Mouse wheel - Zoom
+    Mouse Wheel - Zoom
 
     R - Restart
 
-    ESC - Level Select'
+    ESC - Level Select Menu'
   hideMapAfterCountdown: 0
   mapVisibleDuration: 6
+  isUpsideDownPattern: 0
+  displayedPattern:
+  - {x: 1, y: 1}
+  - {x: 2, y: 2}
+  - {x: 3, y: 3}
+  - {x: 4, y: 2}
+  - {x: 5, y: 4}

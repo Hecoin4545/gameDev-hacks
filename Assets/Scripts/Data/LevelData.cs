@@ -17,4 +17,6 @@ public class LevelData : ScriptableObject
     public string instructions = "";
     public bool hideMapAfterCountdown = false;
     public float mapVisibleDuration = 6.0f;
+    public bool isUpsideDownPattern = false;
+    public List<Vector2Int> displayedPattern = new List<Vector2Int>();
 }

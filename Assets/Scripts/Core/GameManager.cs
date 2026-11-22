@@ -48,8 +48,14 @@ public class GameManager : MonoBehaviour
                 currentLevelIndex = 1;
                 SceneManager.LoadScene("Level2");
             }
+            else if (currentScene == "Level2")
+            {
+                currentLevelIndex = 2;
+                SceneManager.LoadScene("Level3");
+            }
             else
             {
+                currentLevelIndex = 0;
                 SceneManager.LoadScene("MainMenu");
             }
         }

@@ -9,9 +9,9 @@ public class Tile : MonoBehaviour
     public int stepIndex = -1;
     public Renderer rend;
 
-    // The 3D tiles deliberately stay neutral/black. Only the map reveals the safe path.
     public Color neutralColor = new Color(0.055f, 0.062f, 0.068f);
     public Color completedColor = new Color(0.085f, 0.092f, 0.098f);
+    public Color completedEmission = Color.black;
 
     private MaterialPropertyBlock block;
 
@@ -28,7 +28,7 @@ public class Tile : MonoBehaviour
         if (block == null) block = new MaterialPropertyBlock();
         rend.GetPropertyBlock(block);
         block.SetColor("_BaseColor", completed ? completedColor : neutralColor);
-        block.SetColor("_EmissionColor", Color.black);
+        block.SetColor("_EmissionColor", completed ? completedEmission : Color.black);
         rend.SetPropertyBlock(block);
     }
 
@@ -50,7 +50,8 @@ public class Tile : MonoBehaviour
 
     private IEnumerator BounceRoutine()
     {
-        float duration = 0.28f;
+        ApplyColor(true);
+        float duration = 0.32f;
         float time = 0f;
         while (time < duration)
         {
@@ -61,6 +62,7 @@ public class Tile : MonoBehaviour
             yield return null;
         }
         transform.localScale = Vector3.one;
+        ApplyColor(true);
     }
 
     private IEnumerator DangerRoutine()
@@ -74,8 +76,8 @@ public class Tile : MonoBehaviour
             if (rend != null)
             {
                 rend.GetPropertyBlock(block);
-                block.SetColor("_BaseColor", Color.Lerp(neutralColor, new Color(0.55f, 0.03f, 0.03f), pulse));
-                block.SetColor("_EmissionColor", new Color(0.7f, 0.02f, 0.02f) * pulse * 2f);
+                block.SetColor("_BaseColor", Color.Lerp(neutralColor, new Color(0.65f, 0.04f, 0.04f), pulse));
+                block.SetColor("_EmissionColor", new Color(0.9f, 0.04f, 0.04f) * pulse * 2f);
                 rend.SetPropertyBlock(block);
             }
             yield return null;

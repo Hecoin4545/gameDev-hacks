@@ -39,17 +39,28 @@ MonoBehaviour:
   - {x: 5, y: 2}
   - {x: 5, y: 3}
   - {x: 6, y: 3}
-  objective: MEMORIZE THE PATH! The map is visible for 6 seconds, then conceals. Walk the exact path from memory to clear the level.
+  objective: MEMORIZE THE PATH! The blueprint is visible for 6 seconds, then conceals. Walk the exact path from memory to clear the level.
   instructions: 'WASD / Arrows - Move
 
     Space - Jump
 
     Mouse Drag / Q E - Rotate camera
 
-    Mouse wheel - Zoom
+    Mouse Wheel - Zoom
 
     R - Restart
 
-    ESC - Level Select'
+    ESC - Level Select Menu'
   hideMapAfterCountdown: 1
   mapVisibleDuration: 6
+  isUpsideDownPattern: 0
+  displayedPattern:
+  - {x: 1, y: 2}
+  - {x: 2, y: 2}
+  - {x: 2, y: 4}
+  - {x: 3, y: 4}
+  - {x: 4, y: 4}
+  - {x: 4, y: 2}
+  - {x: 5, y: 2}
+  - {x: 5, y: 3}
+  - {x: 6, y: 3}

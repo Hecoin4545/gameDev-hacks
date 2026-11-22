@@ -45,10 +45,15 @@ public class MainMenuManager : MonoBehaviour
             AudioManager.Instance?.PlayLevel2Click();
             StartCoroutine(LoadSceneDelayed("Level2", 0.20f, 1));
         }
+        else if (levelNumber == 3)
+        {
+            AudioManager.Instance?.PlayLevel3Click();
+            StartCoroutine(LoadSceneDelayed("Level3", 0.20f, 2));
+        }
         else
         {
             AudioManager.Instance?.PlayLevelLocked();
-            ShowToast(string.Format("Level {0} is locked!\nComplete Level 2 to unlock.", levelNumber));
+            ShowToast(string.Format("Level {0} is locked!\nComplete Level 3 to unlock.", levelNumber));
         }
     }
 

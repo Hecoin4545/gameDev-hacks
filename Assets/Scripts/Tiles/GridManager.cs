@@ -7,6 +7,11 @@ public class GridManager : MonoBehaviour
     public Material tileEdgeMat;
     public Material tileRockMat;
 
+    public bool useHexTiles = false;
+    public Color customNeutralColor = new Color(0.055f, 0.062f, 0.068f);
+    public Color customCompletedColor = new Color(0.085f, 0.092f, 0.098f);
+    public Color customCompletedEmission = Color.black;
+
     public void Build(LevelData data)
     {
         foreach (Transform c in transform) Destroy(c.gameObject);
@@ -36,8 +41,11 @@ public class GridManager : MonoBehaviour
                 go.transform.SetParent(transform);
                 go.transform.position = pos;
 
-                // Chamfered black top slab (walkable).
-                var slabMesh = BeveledBoxMesh.Create(size, slabHeight, size, 0.075f);
+                // Mesh creation: Hexagonal for cyber level, beveled box for classic levels
+                Mesh slabMesh = useHexTiles
+                    ? HexPrismMesh.Create(size * 0.58f, slabHeight, 0.065f)
+                    : BeveledBoxMesh.Create(size, slabHeight, size, 0.075f);
+
                 var mf = go.AddComponent<MeshFilter>();
                 mf.sharedMesh = slabMesh;
                 var mr = go.AddComponent<MeshRenderer>();
@@ -49,22 +57,33 @@ public class GridManager : MonoBehaviour
                 box.size = new Vector3(size, slabHeight, size);
                 box.center = Vector3.zero;
 
-                // Chunky stone base, like a floating rock platform.
+                // Chunky stone/metal base
                 float baseHeight = 1.05f;
-                AddMeshChild(go.transform, "StoneBase",
-                    BeveledBoxMesh.Create(size * 0.86f, baseHeight, size * 0.86f, 0.12f),
+                Mesh baseMesh = useHexTiles
+                    ? HexPrismMesh.Create(size * 0.50f, baseHeight, 0.10f)
+                    : BeveledBoxMesh.Create(size * 0.86f, baseHeight, size * 0.86f, 0.12f);
+
+                AddMeshChild(go.transform, "Base",
+                    baseMesh,
                     baseMaterial,
                     new Vector3(0f, -slabTop - baseHeight * 0.5f, 0f));
 
                 float rockHeight = 0.95f;
-                AddMeshChild(go.transform, "RockTip",
-                    BeveledBoxMesh.Create(size * 0.52f, rockHeight, size * 0.52f, 0.1f),
+                Mesh tipMesh = useHexTiles
+                    ? HexPrismMesh.Create(size * 0.35f, rockHeight, 0.08f)
+                    : BeveledBoxMesh.Create(size * 0.52f, rockHeight, size * 0.52f, 0.1f);
+
+                AddMeshChild(go.transform, "Tip",
+                    tipMesh,
                     rockMaterial,
                     new Vector3(0f, -slabTop - baseHeight - rockHeight * 0.5f, 0f));
 
                 var tile = go.AddComponent<Tile>();
                 tile.row = r + 1;
                 tile.column = c + 1;
+                tile.neutralColor = customNeutralColor;
+                tile.completedColor = customCompletedColor;
+                tile.completedEmission = customCompletedEmission;
 
                 bool safe = data.safeTiles.Contains(new Vector2Int(r + 1, c + 1));
                 tile.isSafe = safe;
