@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67fb4d8927567b140996a070f6bc680f, type: 3}
+  m_Name: Level2Data
+  m_EditorClassIdentifier: Assembly-CSharp::LevelData
+  levelName: Level 2
+  sceneName: Level2
+  rows: 6
+  columns: 5
+  tileSize: 2.4
+  tileGap: 0.6
+  timeLimit: 120
+  safeTiles:
+  - {x: 1, y: 2}
+  - {x: 2, y: 2}
+  - {x: 2, y: 4}
+  - {x: 3, y: 4}
+  - {x: 4, y: 4}
+  - {x: 4, y: 2}
+  - {x: 5, y: 2}
+  - {x: 5, y: 3}
+  - {x: 6, y: 3}
+  sequence:
+  - {x: 1, y: 2}
+  - {x: 2, y: 2}
+  - {x: 2, y: 4}
+  - {x: 3, y: 4}
+  - {x: 4, y: 4}
+  - {x: 4, y: 2}
+  - {x: 5, y: 2}
+  - {x: 5, y: 3}
+  - {x: 6, y: 3}
+  objective: MEMORIZE THE PATH! The map is visible for 6 seconds, then conceals. Walk the exact path from memory to clear the level.
+  instructions: 'WASD / Arrows - Move
+
+    Space - Jump
+
+    Mouse Drag / Q E - Rotate camera
+
+    Mouse wheel - Zoom
+
+    R - Restart
+
+    ESC - Level Select'
+  hideMapAfterCountdown: 1
+  mapVisibleDuration: 6

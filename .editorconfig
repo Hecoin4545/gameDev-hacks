@@ -1,0 +1,6 @@
+[*.cs]
+dotnet_diagnostic.UAC0020.severity = none
+dotnet_diagnostic.UAC0013.severity = none
+dotnet_diagnostic.UAC0014.severity = none
+dotnet_diagnostic.UAC0018.severity = none
+dotnet_diagnostic.UAC0019.severity = none
