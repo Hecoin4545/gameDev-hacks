@@ -9162,6 +9162,13 @@ MonoBehaviour:
   levelLockedClip: {fileID: 8300000, guid: bfd6a179eb202a6499faa16e454a9995, type: 3}
   levelCompleteClip: {fileID: 0}
   buttonClickClip: {fileID: 0}
+  danceClip: {fileID: 0}
+  fallClip: {fileID: 0}
+  bgMusicClips: []
+  narratorLevel1: {fileID: 0}
+  narratorLevel2: {fileID: 0}
+  narratorLevel3: {fileID: 0}
+  ambientClip: {fileID: 0}
 --- !u!4 &1207735348
 Transform:
   m_ObjectHideFlags: 0

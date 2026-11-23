@@ -11,16 +11,15 @@ using TMPro;
 
 /// <summary>
 /// Builds Level 2 – Desert theme.
-/// Hot sun, sandy dunes, mesa plateaux, terracotta tiles, bleached-bone rocks,
-/// a hazy amber sky, dusty mirages, cacti, and crumbling sandstone islands.
-/// Run via AgentScripts/BuildLevel2.cs menu item.
+/// Uses completely isolated Desert_*.mat materials so it never overwrites Level 1's forest theme.
+/// Correctly calculates start and end island positions based on grid dimensions so no overlap occurs.
 /// </summary>
 public class BuildLevel2
 {
-    // ── Desert palette materials ──────────────────────────────────────────────
-    static Material tileMat;          // dark sandstone tile surface
-    static Material tileEdgeMat;      // terracotta edge bevel
-    static Material tileRockMat;      // deep shadow sandstone
+    // ── Dedicated Desert palette materials (isolated from Level 1) ───────────
+    static Material tileMat;          // desert tile surface
+    static Material tileEdgeMat;      // desert edge bevel
+    static Material tileRockMat;      // desert stone base
 
     static Material sandMat;          // sun-bleached sand
     static Material sandDarkMat;      // shadow / damp sand
@@ -33,13 +32,12 @@ public class BuildLevel2
     static Material boneMat;          // bleached bone / dry salt
     static Material cactusBodyMat;    // succulent green
     static Material cactusSpineMat;   // pale cactus spine accent
-    static Material skullMat;         // bleached skull / dry branch decoration
+    static Material desertRockMat;    // desert rock
     static Material goldMat;          // finish pad gold
 
-    // Player materials reused from Level 1 (same hoodie guy)
+    // Player materials (shared character appearance)
     static Material hoodieMat, hoodMat, jeansMat, skinMat, hairMat, shoeMat, eyeMat, pupilMat;
 
-    // ── Entry point ───────────────────────────────────────────────────────────
     [MenuItem("Tools/Build Level 2 (Desert)")]
     public static void Run()
     {
@@ -49,7 +47,6 @@ public class BuildLevel2
         EnsureFolder("Assets/Meshes");
         EnsureFolder("Assets/UI");
 
-        // Open (or stay on) Level2 scene
         string scenePath = "Assets/Scenes/Level2.unity";
         var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
 
@@ -62,31 +59,33 @@ public class BuildLevel2
         // ── GRID ──────────────────────────────────────────────────────────────
         var gridRoot    = new GameObject("Grid");
         var gridManager = gridRoot.AddComponent<GridManager>();
-        gridManager.safeMat    = tileMat;
-        gridManager.unsafeMat  = tileMat;
+        gridManager.safeMat     = tileMat;
+        gridManager.unsafeMat   = tileMat;
         gridManager.tileEdgeMat = tileEdgeMat;
         gridManager.tileRockMat = tileRockMat;
 
         float stride    = levelData.tileSize + levelData.tileGap;
         float gridDepth = (levelData.rows - 1) * stride;
+        float halfDepth = gridDepth * 0.5f;
 
-        // ── START / END ISLANDS ───────────────────────────────────────────────
-        // Start island: warm sandstone with crumbling edges
+        // Island spacing: offset outside the first and last row of tiles with a comfortable jump gap
+        float islandZOffset = halfDepth + 3.5f;
+
+        // ── START / END ISLANDS (properly spaced outside grid) ─────────────────
         var startIsland = CreateDesertIsland("StartIsland", null,
-            new Vector3(0f, 0.11f, -9.4f),
+            new Vector3(0f, 0.11f, -islandZOffset),
             5.4f, 4.4f, sandMat, sandstoneMatA, sandstoneMatB, true);
 
-        // End island: elevated mesa slab
         var endIsland = CreateDesertIsland("EndIsland", null,
-            new Vector3(0f, 0.11f, gridDepth * 0.5f + 3.5f),
+            new Vector3(0f, 0.11f, islandZOffset),
             5.4f, 4.4f, mesaMat, sandstoneMatA, sandstoneMatB, true);
 
-        // Goal pad (shimmering gold oasis ring)
+        // Goal pad (golden oasis circle)
         CreateBeveledObject("GoalPad", endIsland.transform,
             new Vector3(0f, 0.055f, 0f),
             new Vector3(2.2f, 0.11f, 2.2f), 0.05f, goldMat, false);
 
-        // Floating gem marker — a glinting crystal above the finish
+        // Floating gem marker
         var marker = CreatePrimitive(PrimitiveType.Cube, "GoalMarker", endIsland.transform,
             new Vector3(0f, 2.3f, 0f), new Vector3(0.55f, 0.55f, 0.55f), goldMat, false);
         marker.transform.localRotation = Quaternion.Euler(0f, 45f, 45f);
@@ -96,14 +95,14 @@ public class BuildLevel2
         endTrigger.transform.SetParent(endIsland.transform, false);
         endTrigger.transform.localPosition = new Vector3(0f, 1.6f, 0f);
         var endBox = endTrigger.AddComponent<BoxCollider>();
-        endBox.size    = new Vector3(4.4f, 3.2f, 3.4f);
+        endBox.size      = new Vector3(4.4f, 3.2f, 3.4f);
         endBox.isTrigger = true;
         endTrigger.AddComponent<EndPlatformTrigger>();
 
         gridManager.Build(levelData);
 
-        // ── PLAYER ───────────────────────────────────────────────────────────
-        var player = BuildPlayer(new Vector3(0f, 1.7f, -9.4f));
+        // ── PLAYER (spawns safely in the center of start island) ───────────────
+        var player = BuildPlayer(new Vector3(0f, 1.7f, -islandZOffset));
 
         // ── CAMERA ───────────────────────────────────────────────────────────
         var cam = Camera.main;
@@ -114,13 +113,13 @@ public class BuildLevel2
             camGo.tag = "MainCamera";
             camGo.AddComponent<AudioListener>();
         }
-        cam.fieldOfView  = 52f;
+        cam.fieldOfView   = 52f;
         cam.nearClipPlane = 0.1f;
         cam.farClipPlane  = 700f;
-        cam.allowHDR     = true;
-        cam.allowMSAA    = true;
-        cam.clearFlags   = CameraClearFlags.Skybox;
-        cam.transform.position = new Vector3(0f, 11.5f, -19f);
+        cam.allowHDR      = true;
+        cam.allowMSAA     = true;
+        cam.clearFlags    = CameraClearFlags.Skybox;
+        cam.transform.position = new Vector3(0f, 11.5f, -islandZOffset - 9.6f);
 
         var camData = cam.GetUniversalAdditionalCameraData();
         if (camData != null)
@@ -144,13 +143,13 @@ public class BuildLevel2
         cf.maxDistance     = 22f;
         player.GetComponent<PlayerController>().cameraTransform = cam.transform;
 
-        // ── LIGHTING / SKY ────────────────────────────────────────────────────
+        // ── LIGHTING / DESERT SKY ─────────────────────────────────────────────
         ConfigureLighting();
         ConfigurePostProcessing();
 
         // ── ENVIRONMENT ───────────────────────────────────────────────────────
-        var envRoot   = new GameObject("Environment").transform;
-        var heatHaze  = BuildEnvironment(envRoot);
+        var envRoot  = new GameObject("Environment").transform;
+        var heatHaze = BuildEnvironment(envRoot);
 
         // ── MANAGERS ─────────────────────────────────────────────────────────
         var lmGo = new GameObject("LevelManager");
@@ -176,44 +175,42 @@ public class BuildLevel2
         if (inputModuleType != null) es.AddComponent(inputModuleType);
         else es.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
 
-        // ── ENVIRONMENT ANIMATOR (heat shimmer / dust scroll) ─────────────────
-        var animator   = envRoot.gameObject.AddComponent<EnvironmentAnimator>();
-        animator.cloudRoot = heatHaze;   // repurposed for slow dust-cloud drift
+        // ── ANIMATION (dust haze drift) ───────────────────────────────────────
+        var animator       = envRoot.gameObject.AddComponent<EnvironmentAnimator>();
+        animator.cloudRoot = heatHaze;
 
         EditorSceneManager.SaveScene(scene, scenePath);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log("Level 2 (Desert) built successfully.");
+        Debug.Log("Level 2 (Desert) rebuilt with dedicated materials and bug fixed.");
     }
 
-    // ── MATERIALS ─────────────────────────────────────────────────────────────
+    // ── ISOLATED DESERT MATERIALS ─────────────────────────────────────────────
     static void CreateMaterials()
     {
-        // Tile surfaces (sand-worn dark sandstone)
-        tileMat      = CreateMaterial("Assets/Materials/CyberTile.mat",       new Color(0.24f, 0.19f, 0.14f), 0.02f, 0.14f, 0f);
-        tileEdgeMat  = CreateMaterial("Assets/Materials/CyberTileEdge.mat",   new Color(0.44f, 0.30f, 0.18f), 0f,    0.14f, 0f);
-        tileRockMat  = CreateMaterial("Assets/Materials/CyberTileRock.mat",   new Color(0.33f, 0.22f, 0.13f), 0f,    0.10f, 0f);
+        // Dedicated desert tile materials (NOT touching Level 1 Tile.mat / Stone.mat)
+        tileMat       = CreateMaterial("Assets/Materials/DesertTile.mat",       new Color(0.18f, 0.14f, 0.11f), 0.05f, 0.14f, 0f);
+        tileEdgeMat   = CreateMaterial("Assets/Materials/DesertTileEdge.mat",   new Color(0.48f, 0.34f, 0.22f), 0f,    0.14f, 0f);
+        tileRockMat   = CreateMaterial("Assets/Materials/DesertTileRock.mat",   new Color(0.33f, 0.22f, 0.13f), 0f,    0.10f, 0f);
 
-        // Environment — desert ground + dunes
-        sandMat      = CreateMaterial("Assets/Materials/GrassStart.mat",      new Color(0.89f, 0.74f, 0.48f), 0f, 0.08f, 0f);
-        sandDarkMat  = CreateMaterial("Assets/Materials/GrassDark.mat",       new Color(0.72f, 0.56f, 0.33f), 0f, 0.07f, 0f);
-        duneMat      = CreateMaterial("Assets/Materials/Hill.mat",            new Color(0.93f, 0.80f, 0.57f), 0f, 0.09f, 0f);
-        duneDarkMat  = CreateMaterial("Assets/Materials/GrassEnd.mat",        new Color(0.76f, 0.60f, 0.38f), 0f, 0.07f, 0f);
+        // Dedicated desert landscape materials
+        sandMat       = CreateMaterial("Assets/Materials/DesertSand.mat",       new Color(0.89f, 0.74f, 0.48f), 0f, 0.08f, 0f);
+        sandDarkMat   = CreateMaterial("Assets/Materials/DesertSandDark.mat",   new Color(0.72f, 0.56f, 0.33f), 0f, 0.07f, 0f);
+        duneMat       = CreateMaterial("Assets/Materials/DesertDune.mat",       new Color(0.93f, 0.80f, 0.57f), 0f, 0.09f, 0f);
+        duneDarkMat   = CreateMaterial("Assets/Materials/DesertDuneDark.mat",   new Color(0.76f, 0.60f, 0.38f), 0f, 0.07f, 0f);
 
-        // Sandstone / rock / mesa
-        sandstoneMatA = CreateMaterial("Assets/Materials/Stone.mat",          new Color(0.78f, 0.56f, 0.36f), 0f, 0.12f, 0f);
-        sandstoneMatB = CreateMaterial("Assets/Materials/StoneDark.mat",      new Color(0.55f, 0.37f, 0.22f), 0f, 0.10f, 0f);
-        mesaMat       = CreateMaterial("Assets/Materials/Mountain.mat",       new Color(0.82f, 0.52f, 0.26f), 0f, 0.12f, 0f);
-        mesaDarkMat   = CreateMaterial("Assets/Materials/MountainDark.mat",   new Color(0.56f, 0.33f, 0.15f), 0f, 0.10f, 0f);
+        sandstoneMatA = CreateMaterial("Assets/Materials/DesertSandstoneA.mat", new Color(0.78f, 0.56f, 0.36f), 0f, 0.12f, 0f);
+        sandstoneMatB = CreateMaterial("Assets/Materials/DesertSandstoneB.mat", new Color(0.55f, 0.37f, 0.22f), 0f, 0.10f, 0f);
+        mesaMat       = CreateMaterial("Assets/Materials/DesertMesa.mat",       new Color(0.82f, 0.52f, 0.26f), 0f, 0.12f, 0f);
+        mesaDarkMat   = CreateMaterial("Assets/Materials/DesertMesaDark.mat",   new Color(0.56f, 0.33f, 0.15f), 0f, 0.10f, 0f);
 
-        boneMat       = CreateMaterial("Assets/Materials/Cloud.mat",          new Color(0.94f, 0.90f, 0.80f), 0f, 0.08f, 0f);
-        cactusBodyMat = CreateMaterial("Assets/Materials/Grass.mat",          new Color(0.24f, 0.52f, 0.22f), 0f, 0.18f, 0f);
-        cactusSpineMat= CreateMaterial("Assets/Materials/LeafLight.mat",      new Color(0.84f, 0.82f, 0.70f), 0f, 0.20f, 0f);
-        skullMat      = CreateMaterial("Assets/Materials/Rock.mat",           new Color(0.88f, 0.84f, 0.76f), 0f, 0.08f, 0f);
+        boneMat       = CreateMaterial("Assets/Materials/DesertBone.mat",       new Color(0.94f, 0.90f, 0.80f), 0f, 0.08f, 0f);
+        cactusBodyMat = CreateMaterial("Assets/Materials/DesertCactus.mat",     new Color(0.24f, 0.52f, 0.22f), 0f, 0.18f, 0f);
+        cactusSpineMat= CreateMaterial("Assets/Materials/DesertCactusSpine.mat",new Color(0.84f, 0.82f, 0.70f), 0f, 0.20f, 0f);
+        desertRockMat = CreateMaterial("Assets/Materials/DesertRock.mat",        new Color(0.70f, 0.55f, 0.40f), 0f, 0.10f, 0f);
+        goldMat       = CreateMaterial("Assets/Materials/Gold.mat",            new Color(1f, 0.72f, 0.22f),    0.25f, 0.55f, 0.55f);
 
-        goldMat       = CreateMaterial("Assets/Materials/Gold.mat",           new Color(1f, 0.72f, 0.22f),    0.25f, 0.55f, 0.55f);
-
-        // Player (same hoodie character)
+        // Player materials
         hoodieMat  = CreateMaterial("Assets/Materials/Hoodie.mat", new Color(0.74f, 0.13f, 0.14f), 0f, 0.22f, 0.04f);
         hoodMat    = CreateMaterial("Assets/Materials/Hood.mat",   new Color(0.60f, 0.10f, 0.11f), 0f, 0.20f, 0.02f);
         jeansMat   = CreateMaterial("Assets/Materials/Jeans.mat",  new Color(0.16f, 0.33f, 0.68f), 0f, 0.16f, 0f);
@@ -224,10 +221,15 @@ public class BuildLevel2
         pupilMat   = CreateMaterial("Assets/Materials/Pupil.mat",  new Color(0.06f, 0.06f, 0.08f), 0f, 0.40f, 0f);
     }
 
-    // ── LEVEL DATA ────────────────────────────────────────────────────────────
     static LevelData BuildLevelData()
     {
-        var d = ScriptableObject.CreateInstance<LevelData>();
+        string path = "Assets/Data/Level2Data.asset";
+        var d = AssetDatabase.LoadAssetAtPath<LevelData>(path);
+        if (d == null)
+        {
+            d = ScriptableObject.CreateInstance<LevelData>();
+            AssetDatabase.CreateAsset(d, path);
+        }
         d.levelName  = "Level 2";
         d.sceneName  = "Level2";
         d.rows       = 7;
@@ -238,7 +240,6 @@ public class BuildLevel2
         d.objective  = "The desert sands hide deadly traps. Study the PATH MAP, then jump only the safe tiles and reach the golden oasis.";
         d.instructions = "WASD / Arrows – Move\nSpace – Jump\nRight drag / Q E – Rotate camera\nMouse wheel – Zoom\nR – Restart\nF – Dance";
 
-        // 7 rows × 5 cols — a winding path with more choices
         d.safeTiles = new List<Vector2Int>
         {
             new Vector2Int(1, 2),
@@ -250,15 +251,10 @@ public class BuildLevel2
             new Vector2Int(7, 2),
         };
         d.sequence = new List<Vector2Int>(d.safeTiles);
-
-        // Overwrite existing asset so the scene references it cleanly
-        var existing = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level2Data.asset");
-        if (existing != null) AssetDatabase.DeleteAsset("Assets/Data/Level2Data.asset");
-        AssetDatabase.CreateAsset(d, "Assets/Data/Level2Data.asset");
+        EditorUtility.SetDirty(d);
         return d;
     }
 
-    // ── PLAYER ────────────────────────────────────────────────────────────────
     static GameObject BuildPlayer(Vector3 position)
     {
         var player = new GameObject("Player");
@@ -318,9 +314,9 @@ public class BuildLevel2
             new Vector3(0.28f, 0.17f, 0.44f), shoeMat);
 
         var cc = player.AddComponent<CharacterController>();
-        cc.height    = 2.35f;
-        cc.radius    = 0.38f;
-        cc.center    = new Vector3(0f, 1.175f, 0f);
+        cc.height     = 2.35f;
+        cc.radius     = 0.38f;
+        cc.center     = new Vector3(0f, 1.175f, 0f);
         cc.stepOffset = 0.35f;
         cc.skinWidth  = 0.03f;
 
@@ -329,7 +325,7 @@ public class BuildLevel2
         pc.jumpHeight = 2.2f;
         pc.gravity    = -22f;
 
-        var visual  = player.AddComponent<PlayerVisual>();
+        var visual   = player.AddComponent<PlayerVisual>();
         visual.model = model.transform;
         visual.torso = model.transform.Find("Torso");
         visual.head  = head.transform;
@@ -367,7 +363,6 @@ public class BuildLevel2
         return go;
     }
 
-    // ── LIGHTING / DESERT SKY ─────────────────────────────────────────────────
     static void ConfigureLighting()
     {
         var light = UnityEngine.Object.FindAnyObjectByType<Light>();
@@ -376,22 +371,21 @@ public class BuildLevel2
             var go = new GameObject("Sun");
             light  = go.AddComponent<Light>();
         }
-        light.type          = LightType.Directional;
-        light.color         = new Color(1f, 0.90f, 0.65f);   // hot orange-white sun
-        light.intensity     = 1.65f;
-        light.shadows       = LightShadows.Soft;
+        light.type           = LightType.Directional;
+        light.color          = new Color(1f, 0.90f, 0.65f);
+        light.intensity      = 1.65f;
+        light.shadows        = LightShadows.Soft;
         light.shadowStrength = 0.90f;
-        light.shadowBias    = 0.025f;
+        light.shadowBias     = 0.025f;
         light.shadowNormalBias = 0.30f;
-        light.transform.rotation = Quaternion.Euler(62f, -20f, 0f);  // high, almost overhead
+        light.transform.rotation = Quaternion.Euler(62f, -20f, 0f);
 
-        var sky = CreateSkyboxMaterial();
+        var sky = CreateDesertSkyboxMaterial();
         RenderSettings.skybox           = sky;
         RenderSettings.sun              = light;
         RenderSettings.ambientMode      = AmbientMode.Skybox;
         RenderSettings.ambientIntensity = 1.0f;
 
-        // Heat-haze horizon fog — amber-ochre
         RenderSettings.fog        = true;
         RenderSettings.fogColor   = new Color(0.86f, 0.73f, 0.48f);
         RenderSettings.fogMode    = FogMode.ExponentialSquared;
@@ -400,9 +394,9 @@ public class BuildLevel2
         DynamicGI.UpdateEnvironment();
     }
 
-    static Material CreateSkyboxMaterial()
+    static Material CreateDesertSkyboxMaterial()
     {
-        var path   = "Assets/Materials/Skybox.mat";
+        var path   = "Assets/Materials/DesertSkybox.mat";
         var shader = Shader.Find("Skybox/Procedural");
         var mat    = AssetDatabase.LoadAssetAtPath<Material>(path);
         if (mat == null)
@@ -411,15 +405,13 @@ public class BuildLevel2
             AssetDatabase.CreateAsset(mat, path);
         }
         mat.shader = shader;
-        // Huge blazing sun disc
         mat.SetFloat("_SunDisk",           2f);
         mat.SetFloat("_SunSize",           0.06f);
         mat.SetFloat("_SunSizeConvergence", 4f);
-        // Thin atmosphere — bleached-out desert sky, pale blue fading to ochre
         mat.SetFloat("_AtmosphereThickness", 0.45f);
-        mat.SetColor("_SkyTint",   new Color(0.72f, 0.82f, 1.00f));
+        mat.SetColor("_SkyTint",     new Color(0.72f, 0.82f, 1.00f));
         mat.SetColor("_GroundColor", new Color(0.76f, 0.60f, 0.36f));
-        mat.SetFloat("_Exposure",  1.30f);
+        mat.SetFloat("_Exposure",    1.30f);
         EditorUtility.SetDirty(mat);
         return mat;
     }
@@ -442,9 +434,9 @@ public class BuildLevel2
         ColorAdjustments color;
         if (!profile.TryGet(out color)) color = profile.Add<ColorAdjustments>();
         color.active = true;
-        color.postExposure.Override(0.14f);   // slightly brighter (sun-bleached)
+        color.postExposure.Override(0.14f);
         color.contrast.Override(12f);
-        color.saturation.Override(-8f);        // slightly desaturated / dusty look
+        color.saturation.Override(-8f);
 
         var go     = new GameObject("GlobalVolume");
         var volume = go.AddComponent<Volume>();
@@ -455,17 +447,15 @@ public class BuildLevel2
         EditorUtility.SetDirty(profile);
     }
 
-    // ── ENVIRONMENT ───────────────────────────────────────────────────────────
     static Transform BuildEnvironment(Transform root)
     {
         const float groundY = -30f;
 
-        // ── Sandy ground plane ────────────────────────────────────────────────
         var ground = CreatePrimitive(PrimitiveType.Plane, "Ground", root,
             new Vector3(0f, groundY, 0f), new Vector3(30f, 1f, 30f), sandMat, false);
         ground.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
 
-        // ── Rolling sand dunes (wider, flatter than green hills) ──────────────
+        // Sand dunes
         for (int i = 0; i < 16; i++)
         {
             float angle  = i * (360f / 16f) + 5f;
@@ -480,7 +470,7 @@ public class BuildLevel2
             dune.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
         }
 
-        // ── Smaller ripple dunes close to play space ───────────────────────
+        // Ripples
         UnityEngine.Random.InitState(20261123);
         for (int i = 0; i < 20; i++)
         {
@@ -496,7 +486,7 @@ public class BuildLevel2
             ripple.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
         }
 
-        // ── Mesa plateaux / buttes in background ──────────────────────────────
+        // Mesas
         CreateMesa("MesaA", root, new Vector3(-90f, groundY, 50f),  28f, 25f, 36f, 22f);
         CreateMesa("MesaB", root, new Vector3( 95f, groundY, 30f),  22f, 18f, 28f, 16f);
         CreateMesa("MesaC", root, new Vector3(-60f, groundY, 120f), 36f, 32f, 42f, 28f);
@@ -504,7 +494,6 @@ public class BuildLevel2
         CreateMesa("MesaE", root, new Vector3(-130f, groundY, 20f), 42f, 38f, 54f, 34f);
         CreateMesa("MesaF", root, new Vector3( 130f, groundY, 60f), 32f, 28f, 44f, 24f);
 
-        // Distant background mesas (haze silhouettes)
         for (int i = 0; i < 8; i++)
         {
             float angle  = i * 45f + 18f;
@@ -518,7 +507,7 @@ public class BuildLevel2
                 60f + (i % 3) * 24f, 36f + (i % 3) * 10f);
         }
 
-        // ── Sandstone rock clusters ───────────────────────────────────────────
+        // Rocks
         UnityEngine.Random.InitState(77123);
         for (int i = 0; i < 28; i++)
         {
@@ -531,10 +520,10 @@ public class BuildLevel2
             float sz = 1.5f + UnityEngine.Random.Range(0f, 3.5f);
             CreateBeveledObject("Rock" + i, root, pos,
                 new Vector3(sz, sz * 0.7f, sz * 0.9f), 0.18f,
-                i % 3 == 0 ? skullMat : (i % 2 == 0 ? sandstoneMatA : sandstoneMatB), false);
+                i % 3 == 0 ? boneMat : (i % 2 == 0 ? sandstoneMatA : sandstoneMatB), false);
         }
 
-        // ── Bleached bone / skull accent rocks ────────────────────────────────
+        // Bleached bone
         for (int i = 0; i < 8; i++)
         {
             float angle  = i * 44f + 11f;
@@ -546,7 +535,7 @@ public class BuildLevel2
                 new Vector3(1.1f, 0.8f, 1.3f), 0.22f, boneMat, false);
         }
 
-        // ── Cacti ─────────────────────────────────────────────────────────────
+        // Cacti
         UnityEngine.Random.InitState(42);
         for (int i = 0; i < 20; i++)
         {
@@ -557,7 +546,6 @@ public class BuildLevel2
                 Mathf.Sin(angle * Mathf.Deg2Rad) * radius);
             CreateCactus(root, basePos, UnityEngine.Random.Range(0.8f, 1.6f), i % 3);
         }
-        // Hero cacti — taller ones near play field perimeter for drama
         foreach (float ang in new[] { 20f, 85f, 155f, 230f, 300f })
         {
             float radius = 36f;
@@ -567,7 +555,7 @@ public class BuildLevel2
             CreateCactus(root, basePos, 2.2f, 0);
         }
 
-        // ── Floating sandstone islands (decorative background) ────────────────
+        // Floating desert islands (distant)
         CreateDesertIsland("FloatIslandA", root, new Vector3(-46f, 11f, 20f),
             4.6f, 3.8f, duneMat, sandstoneMatA, sandstoneMatB, false);
         CreateDesertIsland("FloatIslandB", root, new Vector3( 50f, 8f,  18f),
@@ -577,7 +565,7 @@ public class BuildLevel2
         CreateDesertIsland("FloatIslandD", root, new Vector3( 42f, 15f, 44f),
             5.0f, 4.0f, mesaMat, sandstoneMatA, sandstoneMatB, false);
 
-        // ── Floating sandstone boulders in midground ──────────────────────────
+        // Floating rocks
         for (int i = 0; i < 7; i++)
         {
             float angle  = i * 52f + 15f;
@@ -591,7 +579,7 @@ public class BuildLevel2
                 0.20f, i % 2 == 0 ? sandstoneMatA : mesaDarkMat, false);
         }
 
-        // ── Dust/heat cloud puffs (amber-tinted, slow drifting) ───────────────
+        // Dust clouds
         var clouds = new GameObject("DustClouds");
         clouds.transform.SetParent(root, false);
         for (int i = 0; i < 12; i++)
@@ -607,7 +595,6 @@ public class BuildLevel2
             cluster.transform.SetParent(clouds.transform, false);
             cluster.transform.localPosition = pos;
 
-            // Each cloud is 3–5 stretched spheres — amber-tinted and transparent-looking
             for (int k = 0; k < 4; k++)
             {
                 var puff = CreatePrimitive(PrimitiveType.Sphere, "Puff" + k, cluster.transform,
@@ -621,7 +608,6 @@ public class BuildLevel2
         return clouds.transform;
     }
 
-    // ── CACTUS BUILDER ────────────────────────────────────────────────────────
     static void CreateCactus(Transform parent, Vector3 basePos, float scale, int variant)
     {
         var cactus = new GameObject("Cactus");
@@ -629,17 +615,14 @@ public class BuildLevel2
         cactus.transform.localPosition = basePos;
         cactus.transform.localRotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
 
-        // Main trunk
         CreatePrimitive(PrimitiveType.Cylinder, "Trunk", cactus.transform,
             new Vector3(0f, 2.4f * scale, 0f),
             new Vector3(0.38f * scale, 2.4f * scale, 0.38f * scale), cactusBodyMat, false);
 
         if (variant == 0)
         {
-            // Saguaro — two side arms
             foreach (float side in new[] { -1f, 1f })
             {
-                // Horizontal arm segment
                 var armPivot = new GameObject("ArmPivot");
                 armPivot.transform.SetParent(cactus.transform, false);
                 armPivot.transform.localPosition = new Vector3(side * 0.38f * scale, 2.6f * scale, 0f);
@@ -649,12 +632,10 @@ public class BuildLevel2
                     new Vector3(0f, 0.7f * scale, 0f),
                     new Vector3(0.28f * scale, 0.7f * scale, 0.28f * scale), cactusBodyMat, false);
 
-                // Vertical arm extension
                 CreatePrimitive(PrimitiveType.Cylinder, "ArmV", cactus.transform,
                     new Vector3(side * 1.4f * scale, 3.8f * scale, 0f),
                     new Vector3(0.28f * scale, 1.2f * scale, 0.28f * scale), cactusBodyMat, false);
 
-                // Spine clusters (small cylinders)
                 for (int s = 0; s < 3; s++)
                 {
                     CreatePrimitive(PrimitiveType.Sphere, "Spine" + s, cactus.transform,
@@ -665,11 +646,9 @@ public class BuildLevel2
         }
         else if (variant == 1)
         {
-            // Barrel cactus — squat, ribbed
             CreatePrimitive(PrimitiveType.Sphere, "Barrel", cactus.transform,
                 new Vector3(0f, 1.1f * scale, 0f),
                 new Vector3(0.9f * scale, 1.1f * scale, 0.9f * scale), cactusBodyMat, false);
-            // Spines ring
             for (int s = 0; s < 6; s++)
             {
                 float ang = s * 60f;
@@ -682,7 +661,6 @@ public class BuildLevel2
         }
         else
         {
-            // Prickly pear — stacked oval pads
             for (int p = 0; p < 3; p++)
             {
                 float offsetX = (p % 2 == 0 ? 0f : (p == 1 ? -0.4f : 0.4f)) * scale;
@@ -693,7 +671,6 @@ public class BuildLevel2
         }
     }
 
-    // ── MESA BUTTE ────────────────────────────────────────────────────────────
     static void CreateMesa(string name, Transform parent, Vector3 basePos,
         float topW, float topD, float baseW, float baseD)
     {
@@ -702,8 +679,6 @@ public class BuildLevel2
         root.transform.position = basePos;
 
         float groundY = 0f;
-
-        // Layered mesa body — wide base tapering to flat top
         float h1 = 8f, h2 = 12f, h3 = 6f;
 
         CreateBeveledObject(name + "_Base", root.transform,
@@ -718,13 +693,11 @@ public class BuildLevel2
             new Vector3(0f, groundY + h1 + h2 + h3 * 0.5f, 0f),
             new Vector3(topW, h3, topD), 0.25f, sandstoneMatA, false);
 
-        // Flat cap (a slightly lighter sand surface)
         CreateBeveledObject(name + "_Cap", root.transform,
             new Vector3(0f, groundY + h1 + h2 + h3, 0f),
             new Vector3(topW * 0.9f, 0.8f, topD * 0.9f), 0.1f, duneMat, false);
     }
 
-    // ── DESERT ISLAND (sandstone / mesa layers instead of grass/stone) ─────
     static GameObject CreateDesertIsland(string name, Transform parent, Vector3 topCenter,
         float width, float depth, Material top, Material mid, Material bot, bool addCollider)
     {
@@ -751,38 +724,6 @@ public class BuildLevel2
         return root;
     }
 
-    // ── CONE (re-used from Level 1 helpers) ───────────────────────────────────
-    static void CreateCone(string name, Transform parent, Vector3 localPos,
-        float diameter, float height, Material mat, bool castShadows)
-    {
-        var go = new GameObject(name);
-        go.transform.SetParent(parent, false);
-        go.transform.localPosition = localPos;
-        go.transform.localScale    = new Vector3(diameter, height, diameter);
-        var mf = go.AddComponent<MeshFilter>();
-        mf.sharedMesh = GetConeMesh();
-        var mr = go.AddComponent<MeshRenderer>();
-        mr.sharedMaterial   = mat;
-        mr.shadowCastingMode = castShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
-        mr.receiveShadows   = castShadows;
-    }
-
-    static Mesh coneMesh;
-    static Mesh GetConeMesh()
-    {
-        if (coneMesh != null) return coneMesh;
-        const string path = "Assets/Meshes/Cone8.asset";
-        coneMesh = AssetDatabase.LoadAssetAtPath<Mesh>(path);
-        if (coneMesh == null)
-        {
-            coneMesh      = ConeMesh.CreateUnit(8);
-            coneMesh.name = "Cone8";
-            AssetDatabase.CreateAsset(coneMesh, path);
-        }
-        return coneMesh;
-    }
-
-    // ── UI ────────────────────────────────────────────────────────────────────
     static void BuildUI(LevelManager lm, LevelData data)
     {
         var canvasGo = new GameObject("Canvas");
@@ -794,7 +735,7 @@ public class BuildLevel2
         scaler.matchWidthOrHeight  = 0.5f;
         canvasGo.AddComponent<GraphicRaycaster>();
 
-        var ui    = canvasGo.AddComponent<UIManager>();
+        var ui       = canvasGo.AddComponent<UIManager>();
         lm.uiManager = ui;
 
         var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Fonts/Inter-Regular SDF.asset");
@@ -806,11 +747,11 @@ public class BuildLevel2
         ui.roundedSprite = rounded;
         ui.dotSprite     = dot;
 
-        // ── MAP panel (left) ──────────────────────────────────────────────────
+        // MAP panel
         var mapPanel = CreatePanel(canvasGo.transform, "MapPanel",
             new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
             new Vector2(360f, 800f), new Vector2(28f, 0f), rounded,
-            new Color(0.09f, 0.06f, 0.04f, 0.90f));   // dark sand dark
+            new Color(0.09f, 0.06f, 0.04f, 0.90f));
 
         CreateText(mapPanel.transform, "MapTitle", "PATH MAP", font, 30f,
             new Vector2(0f, 340f), new Vector2(312f, 40f), TextAlignmentOptions.Left,
@@ -868,7 +809,7 @@ public class BuildLevel2
             new Vector2(0f, -296f), new Vector2(312f, 34f), TextAlignmentOptions.Center,
             FontStyles.Normal, new Color(0.72f, 0.62f, 0.48f, 1f));
 
-        // ── INFO panel (right) ────────────────────────────────────────────────
+        // INFO panel
         var infoPanel = CreatePanel(canvasGo.transform, "InfoPanel",
             new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
             new Vector2(310f, 580f), new Vector2(-28f, 0f), rounded,
@@ -900,7 +841,7 @@ public class BuildLevel2
             new Vector2(0f, -100f), new Vector2(260f, 160f), TextAlignmentOptions.Left,
             FontStyles.Normal, new Color(0.90f, 0.84f, 0.72f, 1f));
 
-        // ── HUD (top centre: timer + jumps) ───────────────────────────────────
+        // HUD (top center: timer)
         var hud = CreatePanel(canvasGo.transform, "HUD",
             new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
             new Vector2(380f, 72f), new Vector2(0f, -20f), rounded,
@@ -921,24 +862,22 @@ public class BuildLevel2
         timerTxt.alignment    = TextAlignmentOptions.Center;
         ui.timerText = timerTxt;
 
-        // jumps text – decorative only (UIManager has no jumpsText field)
-        var jumpsGo = new GameObject("JumpsText", typeof(RectTransform), typeof(TextMeshProUGUI));
-        jumpsGo.transform.SetParent(hud.transform, false);
-        var jumpsRect = jumpsGo.GetComponent<RectTransform>();
-        jumpsRect.anchorMin = jumpsRect.anchorMax = jumpsRect.pivot = new Vector2(0.5f, 0.5f);
-        jumpsRect.sizeDelta = new Vector2(340f, 28f);
-        jumpsRect.anchoredPosition = new Vector2(0f, -26f);
-        var jumpsTxt = jumpsGo.GetComponent<TextMeshProUGUI>();
-        jumpsTxt.text = "DESERT TRIAL";
-        jumpsTxt.font = font;
-        jumpsTxt.fontSize     = 15f;
-        jumpsTxt.color        = new Color(0.80f, 0.70f, 0.50f, 1f);
-        jumpsTxt.fontStyle    = FontStyles.Bold;
-        jumpsTxt.alignment    = TextAlignmentOptions.Center;
-        jumpsTxt.characterSpacing = 2.5f;
+        var subGo = new GameObject("SubtitleText", typeof(RectTransform), typeof(TextMeshProUGUI));
+        subGo.transform.SetParent(hud.transform, false);
+        var subRect = subGo.GetComponent<RectTransform>();
+        subRect.anchorMin = subRect.anchorMax = subRect.pivot = new Vector2(0.5f, 0.5f);
+        subRect.sizeDelta = new Vector2(340f, 28f);
+        subRect.anchoredPosition = new Vector2(0f, -26f);
+        var subTxt = subGo.GetComponent<TextMeshProUGUI>();
+        subTxt.text = "DESERT TRIAL";
+        subTxt.font = font;
+        subTxt.fontSize     = 15f;
+        subTxt.color        = new Color(0.80f, 0.70f, 0.50f, 1f);
+        subTxt.fontStyle    = FontStyles.Bold;
+        subTxt.alignment    = TextAlignmentOptions.Center;
+        subTxt.characterSpacing = 2.5f;
     }
 
-    // ── SHARED UI HELPERS (copied / adapted from BuildLevel1) ─────────────────
     static GameObject CreatePanel(Transform parent, string name,
         Vector2 anchorMin, Vector2 anchorMax,
         Vector2 size, Vector2 offset, Sprite sprite, Color color)
@@ -1063,7 +1002,6 @@ public class BuildLevel2
         return AssetDatabase.LoadAssetAtPath<Sprite>(path);
     }
 
-    // ── PRIMITIVE / BEVELED HELPERS ───────────────────────────────────────────
     static Material CreateMaterial(string path, Color color, float metallic,
         float smoothness, float emission)
     {
