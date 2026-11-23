@@ -52,13 +52,13 @@ public class MainMenuManager : MonoBehaviour
         }
         else if (levelNumber == 4)
         {
-            AudioManager.Instance?.PlayLevel3Click(); // reuse click sfx
+            AudioManager.Instance?.PlayLevel3Click();
             StartCoroutine(LoadSceneDelayed("Level4", 0.20f, 3));
         }
         else
         {
             AudioManager.Instance?.PlayLevelLocked();
-            ShowToast(string.Format("Level {0} is locked!\nComplete Level 3 to unlock.", levelNumber));
+            ShowToast(string.Format("Level {0} is locked!\nComplete Level 4 to unlock.", levelNumber));
         }
     }
 

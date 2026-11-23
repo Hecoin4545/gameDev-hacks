@@ -24,6 +24,36 @@ public class BuildGame
 
     public static void Run() => RunAll();
 
+    [MenuItem("Tools/Build Main Menu Only")]
+    public static void BuildMenuOnly()
+    {
+        EnsureFolder("Assets/Materials");
+        EnsureFolder("Assets/Data");
+        EnsureFolder("Assets/Meshes");
+        EnsureFolder("Assets/UI");
+
+        CreateMaterials();
+        font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Fonts/Inter-Regular SDF.asset");
+        if (font == null) Debug.LogError("UI font not found at Assets/Fonts/Inter-Regular SDF.asset");
+        rounded = CreateRoundedSprite("Assets/UI/PanelRounded.png", 64, 18, false);
+        dot = CreateRoundedSprite("Assets/UI/Dot.png", 32, 16, true);
+
+        BuildMenuScene();
+
+        EditorBuildSettings.scenes = new[]
+        {
+            new EditorBuildSettingsScene("Assets/Scenes/MainMenu.unity", true),
+            new EditorBuildSettingsScene("Assets/Scenes/Level1.unity", true),
+            new EditorBuildSettingsScene("Assets/Scenes/Level2.unity", true),
+            new EditorBuildSettingsScene("Assets/Scenes/Level3.unity", true),
+            new EditorBuildSettingsScene("Assets/Scenes/Level4.unity", true)
+        };
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        Debug.Log("BuildMainMenu finished: MainMenu rebuilt with Level 1, 2, 3, and 4 cards.");
+    }
+
     public static void RunAll()
     {
         EnsureFolder("Assets/Scenes");
@@ -270,7 +300,7 @@ public class BuildGame
         canvasGo.AddComponent<GraphicRaycaster>();
 
         var menu = canvasGo.AddComponent<MainMenuManager>();
-        menu.levelButtons = new Button[3];
+        menu.levelButtons = new Button[4];
 
         // Header and footer scrims: darken only the bands behind text so the
         // forest stays vivid through the middle of the screen.
@@ -327,30 +357,32 @@ public class BuildGame
         crt.anchorMin = new Vector2(0.5f, 0.5f);
         crt.anchorMax = new Vector2(0.5f, 0.5f);
         crt.pivot = new Vector2(0.5f, 0.5f);
-        crt.sizeDelta = new Vector2(1100f, 340f);
+        crt.sizeDelta = new Vector2(1500f, 340f);
         crt.anchoredPosition = new Vector2(0f, 10f);
 
-        string[] cardTitles = { "PATH FINDER", "MEMORY CHALLENGE", "INVERTED BLUEPRINT" };
+        string[] cardTitles = { "PATH FINDER", "MEMORY CHALLENGE", "INVERTED BLUEPRINT", "NUMBER LOGIC" };
         string[] cardDescs =
         {
             "Learn the route with a live map.",
-            "The map hides after 6 seconds.",
-            "Rows are flipped. Read the map carefully."
+            "The map hides after 5 seconds.",
+            "Rows are flipped. Read the map carefully.",
+            "Solve math clues to find safe tiles."
         };
-        string[] cardMeta = { "4 \u00d7 5 GRID   \u00b7   5 TILES", "6 \u00d7 5 GRID   \u00b7   9 TILES", "6 \u00d7 5 GRID   \u00b7   8 TILES" };
-        float cardW = 360f;
+        string[] cardMeta = { "4 \u00d7 5 GRID   \u00b7   5 TILES", "7 \u00d7 5 GRID   \u00b7   7 TILES", "6 \u00d7 5 GRID   \u00b7   8 TILES", "5 \u00d7 4 GRID   \u00b7   5 TILES" };
+        float cardW = 330f;
         float cardH = 300f;
-        float gap = 36f;
-        float totalW = cardW * 3f + gap * 2f;
+        float gap = 24f;
+        float totalW = cardW * 4f + gap * 3f;
 
         int[][] routeRows =
         {
             new[] { 1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 3, 0, 0 },
             new[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0 },
-            new[] { 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0 }
+            new[] { 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0 },
+            new[] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
         };
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 4; i++)
         {
             float x = -totalW * 0.5f + cardW * 0.5f + i * (cardW + gap);
             var card = CreatePanel(cardsRoot.transform, "LevelCard" + (i + 1),
@@ -430,7 +462,8 @@ public class BuildGame
         {
             AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level1Data.asset"),
             AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level2Data.asset"),
-            AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level3Data.asset")
+            AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level3Data.asset"),
+            AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level4Data.asset")
         };
         gm.currentLevelIndex = 0;
 
