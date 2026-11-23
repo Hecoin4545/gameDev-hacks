@@ -182,15 +182,12 @@ public class BuildScenes
         levelData.objective = "MEMORIZE THE PATH! The map is visible for 6 seconds, then conceals. Walk the exact path from memory to clear the level.";
         levelData.instructions = "WASD / Arrows - Move\nSpace - Jump\nMouse Drag / Q E - Rotate camera\nMouse Wheel - Zoom\nR - Restart\nESC - Level Select Menu";
         
-        // 9-step winding path across 6x5 grid
+        // 6-step path across 6x5 grid (matches Level2Data.asset)
         levelData.safeTiles = new List<Vector2Int> {
             new Vector2Int(1, 2),
-            new Vector2Int(2, 2),
             new Vector2Int(2, 4),
             new Vector2Int(3, 4),
             new Vector2Int(4, 4),
-            new Vector2Int(4, 2),
-            new Vector2Int(5, 2),
             new Vector2Int(5, 3),
             new Vector2Int(6, 3)
         };
@@ -374,7 +371,7 @@ public class BuildScenes
 
             var btn = btnGo.GetComponent<Button>();
             var colors = btn.colors;
-            if (levelNum <= 4)
+            if (levelNum <= 5)
             {
                 colors.normalColor = Color.white;
                 colors.highlightedColor = new Color(1.12f, 1.12f, 1.12f, 1f);
