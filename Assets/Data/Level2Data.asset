@@ -39,7 +39,7 @@ MonoBehaviour:
   - {x: 5, y: 2}
   - {x: 5, y: 3}
   - {x: 6, y: 3}
-  objective: MEMORIZE THE PATH! The blueprint is visible for 6 seconds, then conceals. Walk the exact path from memory to clear the level.
+  objective: MEMORIZE THE PATH! The map is visible for 6 seconds, then conceals. Walk the exact path from memory to clear the level.
   instructions: 'WASD / Arrows - Move
 
     Space - Jump

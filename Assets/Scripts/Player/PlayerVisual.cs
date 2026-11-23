@@ -3,6 +3,7 @@ using UnityEngine;
 /// <summary>
 /// Procedural low-poly character animation for the primitive-built adventurer.
 /// Swings limbs while walking, tucks them while airborne, and adds a landing squash.
+/// Press F to trigger a disco-style dance animation.
 /// </summary>
 public class PlayerVisual : MonoBehaviour
 {
@@ -28,6 +29,15 @@ public class PlayerVisual : MonoBehaviour
     private bool wasGrounded = true;
     private bool dead;
 
+    // Dance state
+    private bool dancing;
+    private float danceTimer;
+    private float dancePhase;
+    private const float DanceDuration = 3.0f;
+
+    // Fall state
+    private bool falling;
+
     void Awake()
     {
         controller = GetComponent<PlayerController>();
@@ -39,6 +49,21 @@ public class PlayerVisual : MonoBehaviour
         if (legR != null) legRBase = legR.localRotation;
     }
 
+    public void TriggerDance()
+    {
+        if (dead || falling) return;
+        dancing = true;
+        danceTimer = DanceDuration;
+        dancePhase = 0f;
+        AudioManager.Instance?.PlayDance();
+    }
+
+    public void PlayFall()
+    {
+        falling = true;
+        dancing = false;
+    }
+
     void Update()
     {
         if (dead)
@@ -47,6 +72,17 @@ public class PlayerVisual : MonoBehaviour
             {
                 model.Rotate(0f, 420f * Time.deltaTime, 0f, Space.World);
                 model.localScale = Vector3.Lerp(model.localScale, Vector3.one * 0.15f, 6f * Time.deltaTime);
+            }
+            return;
+        }
+
+        if (falling)
+        {
+            // Spin and shrink while falling
+            if (model != null)
+            {
+                model.Rotate(0f, 360f * Time.deltaTime, 0f, Space.World);
+                model.localScale = Vector3.Lerp(model.localScale, Vector3.zero, 3f * Time.deltaTime);
             }
             return;
         }
@@ -64,12 +100,38 @@ public class PlayerVisual : MonoBehaviour
         {
             squashTime = 0.18f;
             squashStrength = Mathf.Clamp01(1f - speed * 0.05f);
+            dancing = false; // landing cancels dance
         }
         if (!grounded && wasGrounded)
         {
             jumpStretch = 0.2f;
+            dancing = false;
         }
         wasGrounded = grounded;
+
+        // Dance animation
+        if (dancing)
+        {
+            danceTimer -= dt;
+            if (danceTimer <= 0f) dancing = false;
+            else
+            {
+                dancePhase += dt * 8f;
+                float da = Mathf.Sin(dancePhase) * 60f;
+                float dHip = Mathf.Sin(dancePhase * 0.5f) * 15f;
+                if (armL != null) armL.localRotation = armLBase * Quaternion.Euler(da, 0f, 20f);
+                if (armR != null) armR.localRotation = armRBase * Quaternion.Euler(-da, 0f, -20f);
+                if (legL != null) legL.localRotation = legLBase * Quaternion.Euler(-da * 0.5f, 0f, 0f);
+                if (legR != null) legR.localRotation = legRBase * Quaternion.Euler(da * 0.5f, 0f, 0f);
+                if (model != null)
+                {
+                    float bob = Mathf.Abs(Mathf.Sin(dancePhase * 0.5f)) * 0.12f;
+                    model.localPosition = modelBasePos + Vector3.up * bob;
+                    model.Rotate(0f, dHip, 0f, Space.Self);
+                }
+                return;
+            }
+        }
 
         // Face the direction of travel.
         if (model != null && controller != null)
@@ -130,6 +192,8 @@ public class PlayerVisual : MonoBehaviour
     public void PlayDeath()
     {
         dead = true;
+        dancing = false;
+        falling = false;
         if (cc != null) cc.enabled = false;
         if (controller != null) controller.enabled = false;
     }

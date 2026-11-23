@@ -37,7 +37,7 @@ MonoBehaviour:
   - {x: 4, y: 2}
   - {x: 5, y: 2}
   - {x: 6, y: 2}
-  objective: 'UPSIDE-DOWN BLUEPRINT! Study the map for 8s. The arena rows are INVERTED: the LAST row on the blueprint must be jumped FIRST!'
+  objective: 'UPSIDE-DOWN MEMORY! Study the blueprint for 8s. The physical rows are INVERTED: the LAST row on the blueprint must be jumped FIRST!'
   instructions: 'WASD / Arrows - Move
 
     Space - Jump

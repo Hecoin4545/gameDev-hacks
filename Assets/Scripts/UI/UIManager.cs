@@ -107,25 +107,36 @@ public class UIManager : MonoBehaviour
 
         if (objectiveText != null) objectiveText.text = data.objective;
         if (instructionsText != null) instructionsText.text = data.instructions;
-        if (mapPlayerLabel != null) mapPlayerLabel.text = "You are here";
+        if (mapPlayerLabel != null)
+        {
+            mapPlayerLabel.text = "You are here";
+            mapPlayerLabel.fontSize = 17f;
+        }
 
         if (data.hideMapAfterCountdown)
         {
             if (mapHintText != null)
             {
+                mapHintText.fontSize = 16f;
                 if (data.isUpsideDownPattern)
-                    mapHintText.text = "Top blueprint row = 1st jump in the arena.";
+                    mapHintText.text = "Top row on map = your 1st jump in the arena.";
                 else
-                    mapHintText.text = "Memorize before the path conceals!";
+                    mapHintText.text = "Memorize the green tiles before they disappear!";
             }
             UpdateMapCountdown(data.mapVisibleDuration);
         }
         else
         {
             if (mapStatusText != null)
+            {
                 mapStatusText.text = "LIVE PATH GUIDANCE";
+                mapStatusText.fontSize = 18f;
+            }
             if (mapHintText != null)
-                mapHintText.text = "The map mirrors what you see in the course.";
+            {
+                mapHintText.text = "Green = safe tiles. JUMP to land on each one.";
+                mapHintText.fontSize = 16f;
+            }
         }
     }
 
@@ -206,9 +217,9 @@ public class UIManager : MonoBehaviour
                 if (dr == 0 && font != null)
                 {
                     var label = CreateLabel(mapContainer, "Col" + col, "C" + col,
-                        new Vector2(x, totalH * 0.5f + 18f), new Vector2(cell, 24f));
-                    label.color = new Color(0.74f, 0.79f, 0.84f, 1f);
-                    label.fontSize = 15.5f;
+                        new Vector2(x, totalH * 0.5f + 20f), new Vector2(cell, 28f));
+                    label.color = new Color(0.90f, 0.95f, 1f, 1f);
+                    label.fontSize = 20f;
                     label.fontStyle = FontStyles.Bold;
                 }
             }
@@ -220,17 +231,16 @@ public class UIManager : MonoBehaviour
                 string rowText = "R" + row;
                 if (isUpsideDown)
                 {
-                    // Annotate inverted order
                     int jumpStep = dr + 1;
-                    if (jumpStep == 1) rowText = "R" + row + " (1st)";
-                    else if (jumpStep == 2) rowText = "R" + row + " (2nd)";
-                    else if (jumpStep == mapRows) rowText = "R" + row + " (Last)";
+                    if (jumpStep == 1) rowText = "R" + row + "\n(1st)";
+                    else if (jumpStep == 2) rowText = "R" + row + "\n(2nd)";
+                    else if (jumpStep == mapRows) rowText = "R" + row + "\n(Last)";
                 }
 
                 var rowLabel = CreateLabel(mapContainer, "Row" + row, rowText,
-                    new Vector2(gridLeft - 47f, y), new Vector2(82f, 22f));
-                rowLabel.color = isUpsideDown ? new Color(1f, 0.85f, 0.35f, 1f) : new Color(0.74f, 0.79f, 0.84f, 1f);
-                rowLabel.fontSize = isUpsideDown ? 12.5f : 14.5f;
+                    new Vector2(gridLeft - 47f, y), new Vector2(82f, 28f));
+                rowLabel.color = isUpsideDown ? new Color(1f, 0.90f, 0.30f, 1f) : new Color(0.90f, 0.95f, 1f, 1f);
+                rowLabel.fontSize = isUpsideDown ? 15f : 18f;
                 rowLabel.fontStyle = FontStyles.Bold;
                 rowLabel.alignment = TextAlignmentOptions.Right;
             }
@@ -247,18 +257,19 @@ public class UIManager : MonoBehaviour
     {
         if (mapStatusText != null)
         {
+            mapStatusText.fontSize = 18f;
             if (timeLeft > 0.05f)
             {
-                string label = isUpsideDown ? "UPSIDE-DOWN BLUEPRINT" : "MEMORIZE PATH";
-                mapStatusText.text = string.Format("{0}: <color=#FFE600>{1:0.0}s</color>", label, timeLeft);
-                mapStatusText.color = timeLeft <= 2.5f ? new Color(1f, 0.40f, 0.35f) : new Color(0.35f, 0.95f, 0.55f);
+                string label = isUpsideDown ? "MEMORIZE (REVERSED)" : "MEMORIZE PATH";
+                mapStatusText.text = string.Format("{0}:  <color=#FFE600><b>{1:0.0}s</b></color>", label, timeLeft);
+                mapStatusText.color = timeLeft <= 2.5f ? new Color(1f, 0.35f, 0.28f) : new Color(0.35f, 0.98f, 0.60f);
             }
             else
             {
                 mapStatusText.text = isUpsideDown
-                    ? "BLUEPRINT HIDDEN \u00b7 REVERSE ROWS"
-                    : "PATH HIDDEN \u00b7 WALK FROM MEMORY";
-                mapStatusText.color = new Color(1f, 0.82f, 0.28f);
+                    ? "PATH HIDDEN  -  REVERSE ORDER"
+                    : "PATH HIDDEN  -  GO FROM MEMORY";
+                mapStatusText.color = new Color(1f, 0.85f, 0.20f);
             }
         }
     }
@@ -352,6 +363,86 @@ public class UIManager : MonoBehaviour
             levelCompleteTime.text = string.Format("Cleared with <color=#FFE600>{0:0.0}s</color> remaining", Mathf.Max(0f, timeLeft));
     }
 
+    // ── Narrator UI ──────────────────────────────────────────────────────────
+
+    private GameObject narratorPanel;
+    private TMP_Text narratorText;
+
+    public void ShowNarrator(string text)
+    {
+        if (narratorPanel == null)
+        {
+            // Build a full-width banner at the bottom of the screen
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas == null) return;
+            narratorPanel = new GameObject("NarratorPanel");
+            narratorPanel.transform.SetParent(canvas.transform, false);
+            var rt = narratorPanel.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(1f, 0f);
+            rt.pivot     = new Vector2(0.5f, 0f);
+            rt.offsetMin = new Vector2(24f, 20f);
+            rt.offsetMax = new Vector2(-24f, 210f);  // taller panel
+
+            // Dark semi-transparent background
+            var bg = narratorPanel.AddComponent<Image>();
+            bg.color = new Color(0.04f, 0.06f, 0.10f, 0.88f);
+
+            // Coloured top accent bar
+            var accentGo = new GameObject("Accent");
+            accentGo.transform.SetParent(narratorPanel.transform, false);
+            var accentRt = accentGo.AddComponent<RectTransform>();
+            accentRt.anchorMin = new Vector2(0f, 1f); accentRt.anchorMax = new Vector2(1f, 1f);
+            accentRt.pivot = new Vector2(0.5f, 1f);
+            accentRt.sizeDelta = new Vector2(0f, 4f);
+            var accentImg = accentGo.AddComponent<Image>();
+            accentImg.color = new Color(0.35f, 0.95f, 0.55f, 1f); // bright green accent
+
+            // Text
+            var textGo = new GameObject("NarratorText");
+            textGo.transform.SetParent(narratorPanel.transform, false);
+            var trt = textGo.AddComponent<RectTransform>();
+            trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+            trt.offsetMin = new Vector2(20f, 10f); trt.offsetMax = new Vector2(-20f, -12f);
+            narratorText = textGo.AddComponent<TextMeshProUGUI>();
+            narratorText.font  = font;
+            narratorText.fontSize = 26f;
+            narratorText.color = new Color(1f, 1f, 1f, 1f);
+            narratorText.alignment = TextAlignmentOptions.Center;
+            narratorText.textWrappingMode = TextWrappingModes.Normal;
+            narratorText.raycastTarget = false;
+        }
+
+        // No emoji — avoids font-fallback warnings
+        if (narratorText != null) narratorText.text = "[ NARRATOR ]  " + text;
+        narratorPanel.SetActive(true);
+        StartCoroutine(FadeIn(narratorPanel, 0.4f));
+    }
+
+    public void HideNarrator()
+    {
+        if (narratorPanel != null)
+            StartCoroutine(FadeOutAndHide(narratorPanel, 0.6f));
+    }
+
+    private IEnumerator FadeOutAndHide(GameObject go, float duration)
+    {
+        var cg = go.GetComponent<CanvasGroup>();
+        if (cg == null) cg = go.AddComponent<CanvasGroup>();
+        float t = 0f;
+        float startAlpha = cg.alpha;
+        while (t < duration)
+        {
+            t += Time.unscaledDeltaTime;
+            cg.alpha = Mathf.Lerp(startAlpha, 0f, t / duration);
+            yield return null;
+        }
+        cg.alpha = 0f;
+        go.SetActive(false);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+
     public void ShowFail()
     {
         if (failPanel == null) return;
@@ -406,8 +497,8 @@ public class UIManager : MonoBehaviour
         var t = go.AddComponent<TextMeshProUGUI>();
         t.text = content;
         t.font = font;
-        t.fontSize = 14f;
-        t.color = new Color(0.82f, 0.88f, 0.95f, 1f);
+        t.fontSize = 18f;
+        t.color = new Color(0.90f, 0.95f, 1f, 1f);
         t.alignment = TextAlignmentOptions.Center;
         t.raycastTarget = false;
         return t;

@@ -14,6 +14,7 @@ public class Tile : MonoBehaviour
     public Color completedEmission = Color.black;
 
     private MaterialPropertyBlock block;
+    private bool isFalling;
 
     void Awake()
     {
@@ -46,6 +47,15 @@ public class Tile : MonoBehaviour
         if (!gameObject.activeInHierarchy) return;
         StopAllCoroutines();
         StartCoroutine(DangerRoutine());
+    }
+
+    /// <summary>Both the tile and anything on it will fall down and be destroyed.</summary>
+    public void FallOff()
+    {
+        if (isFalling) return;
+        isFalling = true;
+        StopAllCoroutines();
+        StartCoroutine(FallRoutine());
     }
 
     private IEnumerator BounceRoutine()
@@ -83,5 +93,43 @@ public class Tile : MonoBehaviour
             yield return null;
         }
         ApplyColor(false);
+    }
+
+    private IEnumerator FallRoutine()
+    {
+        // Brief shake/flash first
+        float shakeTime = 0.3f;
+        float elapsed = 0f;
+        Vector3 origin = transform.position;
+        while (elapsed < shakeTime)
+        {
+            elapsed += Time.deltaTime;
+            float shake = (1f - elapsed / shakeTime) * 0.08f;
+            transform.position = origin + new Vector3(Random.Range(-shake, shake), 0f, Random.Range(-shake, shake));
+            if (rend != null)
+            {
+                rend.GetPropertyBlock(block);
+                block.SetColor("_EmissionColor", new Color(1f, 0.3f, 0f) * 3f);
+                rend.SetPropertyBlock(block);
+            }
+            yield return null;
+        }
+        transform.position = origin;
+
+        // Now fall: add a Rigidbody and let physics do the work
+        var col = GetComponent<Collider>();
+        if (col != null) col.enabled = false;
+
+        // Also disable colliders on children
+        foreach (var c in GetComponentsInChildren<Collider>())
+            c.enabled = false;
+
+        var rb = gameObject.AddComponent<Rigidbody>();
+        rb.mass = 2f;
+        rb.angularDamping = 0.1f;
+        rb.AddTorque(new Vector3(Random.Range(-3f, 3f), Random.Range(-1f, 1f), Random.Range(-3f, 3f)), ForceMode.Impulse);
+
+        yield return new WaitForSeconds(2.5f);
+        Destroy(gameObject);
     }
 }

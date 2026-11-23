@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 #if ENABLE_INPUT_SYSTEM
@@ -6,7 +7,8 @@ using UnityEngine.InputSystem;
 
 /// <summary>
 /// Smooth third-person orbit camera. Drag with mouse (Left, Right, or Middle click) or use Q/E
-/// to rotate around the player. Mouse wheel zooms. Keeps the grid and player in clear view.
+/// to rotate around the player. Mouse wheel zooms.
+/// On level start, performs a cinematic fly-over of the whole course.
 /// </summary>
 public class CameraFollow : MonoBehaviour
 {
@@ -27,9 +29,25 @@ public class CameraFollow : MonoBehaviour
     public float targetHeight = 1.35f;
     public float lookAhead = 4.0f;
 
+    // Fly-over settings
+    [Header("Fly-Over")]
+    public bool doFlyOver = true;
+    public float flyOverHeight = 18f;
+    public float flyOverDuration = 4.5f;
+    public Transform gridRoot;             // assigned automatically via LevelManager
+
     private Vector3 smoothPivot;
     private bool initialized;
     private bool isDraggingMouse;
+
+    // fly-over state
+    private bool flyingOver;
+    private bool flyOverDone;
+    private float flyOverT;
+    private Vector3 flyOverStart;
+    private Vector3 flyOverEnd;
+
+    public bool IsFlyOverDone => flyOverDone || !doFlyOver;
 
     void Start()
     {
@@ -39,11 +57,64 @@ public class CameraFollow : MonoBehaviour
             initialized = true;
             SnapToTarget();
         }
+
+        if (doFlyOver) StartCoroutine(FlyOverRoutine());
+        else flyOverDone = true;
+    }
+
+    public IEnumerator FlyOverRoutine()
+    {
+        flyingOver = true;
+        flyOverDone = false;
+        flyOverT = 0f;
+
+        // Determine bounding box of the course
+        Bounds bounds = GetCourseBounds();
+        Vector3 center = bounds.center;
+
+        // Start: one end of the course. End: other end of the course.
+        flyOverStart = new Vector3(bounds.min.x - 4f, center.y + flyOverHeight, center.z);
+        flyOverEnd   = new Vector3(bounds.max.x + 4f, center.y + flyOverHeight, center.z);
+
+        // Snap camera to start position immediately
+        transform.position = flyOverStart;
+        transform.LookAt(center);
+
+        while (flyOverT < 1f)
+        {
+            flyOverT += Time.deltaTime / flyOverDuration;
+            float t = Mathf.SmoothStep(0f, 1f, flyOverT);
+            Vector3 pos = Vector3.Lerp(flyOverStart, flyOverEnd, t);
+            transform.position = pos;
+            transform.LookAt(center);
+            yield return null;
+        }
+
+        flyingOver = false;
+        flyOverDone = true;
+
+        // Snap back to player
+        if (target != null) SnapToTarget();
+    }
+
+    private Bounds GetCourseBounds()
+    {
+        Bounds b = new Bounds(target != null ? target.position : Vector3.zero, Vector3.one * 5f);
+        Transform root = gridRoot != null ? gridRoot : (target != null ? target.parent : null);
+        if (root != null)
+        {
+            foreach (Renderer r in root.GetComponentsInChildren<Renderer>())
+            {
+                b.Encapsulate(r.bounds);
+            }
+        }
+        return b;
     }
 
     void LateUpdate()
     {
         if (target == null) return;
+        if (flyingOver) return; // hands off during fly-over
 
         HandleInput();
 

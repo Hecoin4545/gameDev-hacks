@@ -12,7 +12,16 @@ public class LevelManager : MonoBehaviour
     public PlayerController player;
     public Transform startPlatform;
     public Transform endPlatform;
-    public float restartDelay = 1.2f;
+    public float restartDelay = 1.8f;
+
+    [Header("Narrator")]
+    [TextArea(2, 4)]
+    public string[] levelNarratorTexts = new string[]
+    {
+        "Welcome, brave adventurer! The ancient path of tiles awaits you. Only the safe tiles will hold your weight — choose wisely!",
+        "You've reached the Bridge of Shadows! The tiles here are tricky — some will crumble beneath your feet. Remember the sequence!",
+        "The final trial — the Crystal Labyrinth! Few have made it this far. Watch your step... and your timing!"
+    };
 
     private int progress = 0;
     private float timer;
@@ -21,6 +30,13 @@ public class LevelManager : MonoBehaviour
     private bool running = false;
     private bool completed = false;
     private Tile currentTile;
+
+    // Phase flags
+    private bool introPhase = true;    // fly-over + narrator, player locked
+    private bool playerFalling = false;
+
+    private Vector3 startPosition;
+    private CameraFollow camFollow;
 
     private static Material fxMaterial;
 
@@ -46,20 +62,74 @@ public class LevelManager : MonoBehaviour
             uiManager.UpdateTimer(timer);
             uiManager.ClearPlayerTile();
             if (data.hideMapAfterCountdown)
-            {
                 uiManager.UpdateMapCountdown(mapCountdownTimer);
-            }
         }
-        running = true;
+
         if (player != null && startPlatform != null)
         {
-            player.transform.position = startPlatform.position + Vector3.up * 1.5f;
+            startPosition = startPlatform.position + Vector3.up * 1.5f;
+            player.transform.position = startPosition;
         }
+        else if (player != null)
+        {
+            startPosition = player.transform.position;
+        }
+
+        // Lock player input during intro
+        if (player != null) player.SetInputEnabled(false);
+
+        camFollow = FindObjectOfType<CameraFollow>();
+        if (camFollow != null && gridManager != null)
+            camFollow.gridRoot = gridManager.transform;
+
+        // Determine level index for audio
+        int levelIdx = 0;
+        string sn = SceneManager.GetActiveScene().name;
+        if (sn.Contains("2")) levelIdx = 1;
+        else if (sn.Contains("3")) levelIdx = 2;
+
+        // Start background music immediately
+        AudioManager.Instance?.PlayBGMusic(levelIdx);
+        AudioManager.Instance?.PlayAmbient();
+
+        // Start the intro sequence
+        StartCoroutine(IntroSequence(levelIdx));
+    }
+
+    private IEnumerator IntroSequence(int levelIdx)
+    {
+        // 1. Wait for fly-over to complete
+        if (camFollow != null && camFollow.doFlyOver)
+        {
+            yield return new WaitUntil(() => camFollow.IsFlyOverDone);
+        }
+
+        // 2. Show narrator subtitle and play voice
+        string text = levelIdx < levelNarratorTexts.Length ? levelNarratorTexts[levelIdx] : "";
+        if (uiManager != null && !string.IsNullOrEmpty(text))
+            uiManager.ShowNarrator(text);
+
+        AudioManager.Instance?.PlayNarrator(levelIdx + 1);
+
+        // Wait while narrator is playing (or a minimum 3s if no clip)
+        float waitTime = 0f;
+        while (waitTime < 3f || (AudioManager.Instance != null && AudioManager.Instance.IsNarratorPlaying()))
+        {
+            waitTime += Time.deltaTime;
+            yield return null;
+        }
+
+        if (uiManager != null) uiManager.HideNarrator();
+
+        // 3. Unlock player
+        introPhase = false;
+        running = true;
+        if (player != null) player.SetInputEnabled(true);
     }
 
     void Update()
     {
-        if (!running || completed || data == null) return;
+        if (introPhase || !running || completed || data == null) return;
         timer -= Time.deltaTime;
         if (timer <= 0f)
         {
@@ -92,7 +162,7 @@ public class LevelManager : MonoBehaviour
 
     public void OnTileLanded(Tile tile)
     {
-        if (!running || completed || data == null) return;
+        if (introPhase || !running || completed || data == null) return;
         if (tile == currentTile) return;
         currentTile = tile;
 
@@ -118,10 +188,34 @@ public class LevelManager : MonoBehaviour
         }
         else
         {
+            // Wrong tile: flash, then tile and character both fall
             tile.FlashDanger();
             AudioManager.Instance?.PlayWrongJump();
-            Fail("Wrong tile!");
+            AudioManager.Instance?.PlayFall();
+            StartCoroutine(WrongTileFall(tile));
         }
+    }
+
+    private IEnumerator WrongTileFall(Tile tile)
+    {
+        running = false;
+        // Trigger player fall visuals
+        var visual = player != null ? player.GetComponent<PlayerVisual>() : null;
+        if (visual != null) visual.PlayFall();
+        if (player != null) player.SetInputEnabled(false);
+
+        // Slight delay so the player sinks a bit before tile falls
+        yield return new WaitForSeconds(0.35f);
+        tile.FallOff();
+
+        SpawnParticles(player != null ? player.transform.position : Vector3.zero,
+            new Color(1f, 0.4f, 0.1f), 32, 0.8f);
+
+        yield return new WaitForSeconds(0.5f);
+        if (uiManager != null) uiManager.ShowFail();
+
+        yield return new WaitForSeconds(restartDelay);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void OnTileExited(Tile tile)
@@ -140,6 +234,20 @@ public class LevelManager : MonoBehaviour
             new Color(1f, 0.22f, 0.18f), 48, 0.9f);
         if (uiManager != null) uiManager.ShowFail();
         StartCoroutine(RestartRoutine());
+    }
+
+    /// <summary>Teleport player back to the start tile (used when falling off the starting area).</summary>
+    public void RespawnAtStart()
+    {
+        if (completed) return;
+        // Don't count this as a fail, just warp back
+        if (player != null)
+        {
+            var cc = player.GetComponent<CharacterController>();
+            if (cc != null) cc.enabled = false;
+            player.transform.position = startPosition;
+            if (cc != null) cc.enabled = true;
+        }
     }
 
     public void OnReachEnd()
@@ -238,12 +346,8 @@ public class LevelManager : MonoBehaviour
     {
         AudioManager.Instance?.PlayButtonClick();
         if (GameManager.Instance != null)
-        {
             GameManager.Instance.LoadMainMenu();
-        }
         else
-        {
             SceneManager.LoadScene("MainMenu");
-        }
     }
 }
