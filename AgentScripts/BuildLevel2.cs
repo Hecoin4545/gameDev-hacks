@@ -159,6 +159,12 @@ public class BuildLevel2
         lm.player        = player.GetComponent<PlayerController>();
         lm.startPlatform = startIsland.transform;
         lm.endPlatform   = endIsland.transform;
+        lm.levelNarratorTexts = new string[]
+        {
+            "Welcome, brave adventurer! The ancient path of tiles awaits you. Only the safe tiles will hold your weight — choose wisely!",
+            "The desert sands are treacherous! Memorize the path in 5 seconds before the map vanishes, then navigate the dunes from memory!",
+            "Welcome to the Frozen Crags! The icy tiles are slick and perilous through the snowfall. Remember the blueprint in reverse to reach the summit!"
+        };
 
         var gmGo = new GameObject("GameManager");
         var gm   = gmGo.AddComponent<GameManager>();
@@ -237,8 +243,11 @@ public class BuildLevel2
         d.tileSize   = 2.4f;
         d.tileGap    = 0.65f;
         d.timeLimit  = 150f;
-        d.objective  = "The desert sands hide deadly traps. Study the PATH MAP, then jump only the safe tiles and reach the golden oasis.";
+        d.objective  = "The desert sands hide deadly traps. Memorize the path in 5 SECONDS before it disappears, then walk the path from memory to reach the golden oasis!";
         d.instructions = "WASD / Arrows – Move\nSpace – Jump\nRight drag / Q E – Rotate camera\nMouse wheel – Zoom\nR – Restart\nF – Dance";
+        d.hideMapAfterCountdown = true;
+        d.mapVisibleDuration = 5.0f;
+        d.isUpsideDownPattern = false;
 
         d.safeTiles = new List<Vector2Int>
         {

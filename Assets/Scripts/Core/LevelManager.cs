@@ -19,8 +19,8 @@ public class LevelManager : MonoBehaviour
     public string[] levelNarratorTexts = new string[]
     {
         "Welcome, brave adventurer! The ancient path of tiles awaits you. Only the safe tiles will hold your weight — choose wisely!",
-        "You've reached the Bridge of Shadows! The tiles here are tricky — some will crumble beneath your feet. Remember the sequence!",
-        "The final trial — the Crystal Labyrinth! Few have made it this far. Watch your step... and your timing!"
+        "The desert sands are treacherous! Memorize the path in 5 seconds before the map vanishes, then navigate the dunes from memory!",
+        "Welcome to the Frozen Crags! The icy tiles are slick and perilous through the snowfall. Remember the blueprint in reverse to reach the summit!"
     };
 
     private int progress = 0;
