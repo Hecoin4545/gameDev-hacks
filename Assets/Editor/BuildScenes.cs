@@ -374,7 +374,7 @@ public class BuildScenes
 
             var btn = btnGo.GetComponent<Button>();
             var colors = btn.colors;
-            if (levelNum <= 3)
+            if (levelNum <= 4)
             {
                 colors.normalColor = Color.white;
                 colors.highlightedColor = new Color(1.12f, 1.12f, 1.12f, 1f);
@@ -423,7 +423,8 @@ public class BuildScenes
         var l1 = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level1Data.asset");
         var l2 = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level2Data.asset");
         var l3 = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level3Data.asset");
-        gm.levels = new LevelData[] { l1, l2, l3 };
+        var l4 = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level4Data.asset");
+        gm.levels = new LevelData[] { l1, l2, l3, l4 };
         gm.currentLevelIndex = 0;
 
         EditorSceneManager.SaveScene(scene, "Assets/Scenes/MainMenu.unity");
@@ -514,7 +515,8 @@ public class BuildScenes
         var l1 = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level1Data.asset");
         var l2 = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level2Data.asset");
         var l3 = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level3Data.asset");
-        gm.levels = new LevelData[] { l1, l2, l3 };
+        var l4 = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level4Data.asset");
+        gm.levels = new LevelData[] { l1, l2, l3, l4 };
         gm.currentLevelIndex = 0;
 
         BuildUI(lm, levelData);
@@ -617,7 +619,8 @@ public class BuildScenes
         var l1 = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level1Data.asset");
         var l2 = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level2Data.asset");
         var l3 = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level3Data.asset");
-        gm.levels = new LevelData[] { l1, l2, l3 };
+        var l4 = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level4Data.asset");
+        gm.levels = new LevelData[] { l1, l2, l3, l4 };
         gm.currentLevelIndex = 1;
 
         BuildUI(lm, levelData);
@@ -721,7 +724,8 @@ public class BuildScenes
         var l1 = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level1Data.asset");
         var l2 = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level2Data.asset");
         var l3 = levelData;
-        gm.levels = new LevelData[] { l1, l2, l3 };
+        var l4 = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Data/Level4Data.asset");
+        gm.levels = new LevelData[] { l1, l2, l3, l4 };
         gm.currentLevelIndex = 2;
 
         BuildUI(lm, levelData);
