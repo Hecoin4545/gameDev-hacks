@@ -241,7 +241,7 @@ public class BuildLevel2
         d.rows       = 7;
         d.columns    = 5;
         d.tileSize   = 2.4f;
-        d.tileGap    = 0.65f;
+        d.tileGap    = 0.45f;
         d.timeLimit  = 150f;
         d.objective  = "The desert sands hide deadly traps. Memorize the path in 5 SECONDS before it disappears, then walk the path from memory to reach the golden oasis!";
         d.instructions = "WASD / Arrows – Move\nSpace – Jump\nRight drag / Q E – Rotate camera\nMouse wheel – Zoom\nR – Restart\nF – Dance";

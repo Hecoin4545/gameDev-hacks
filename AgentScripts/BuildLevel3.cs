@@ -1095,32 +1095,32 @@ public class BuildLevel3
         hintLabel.alignment = TextAlignmentOptions.Center;
         ui.mapHintText = hintLabel;
 
-        // INFO Panel (top left)
+        // INFO Panel (top left) — taller panel to fit all text cleanly
         var infoPanel = CreatePanel(canvasGo.transform, "InfoPanel",
             new Vector2(0f, 1f), new Vector2(0f, 1f),
-            new Vector2(36f, -36f), new Vector2(420f, 250f),
+            new Vector2(36f, -36f), new Vector2(420f, 290f),
             new Color(0.06f, 0.10f, 0.18f, 0.92f), rounded);
 
         var titleLabel = CreateLabelTopLeft(infoPanel.transform, "Title", "LEVEL 03",
-            new Vector2(24f, -20f), new Vector2(372f, 34f), font, 26f, FontStyles.Bold,
+            new Vector2(24f, -18f), new Vector2(372f, 32f), font, 24f, FontStyles.Bold,
             new Color(0.55f, 0.88f, 1.0f));
         titleLabel.alignment = TextAlignmentOptions.Left;
         ui.levelTitle = titleLabel;
 
         var subLabel = CreateLabelTopLeft(infoPanel.transform, "Subtitle", "UPSIDE-DOWN MEMORY",
-            new Vector2(24f, -56f), new Vector2(372f, 22f), font, 14f, FontStyles.Bold,
+            new Vector2(24f, -52f), new Vector2(372f, 20f), font, 13f, FontStyles.Bold,
             new Color(0.95f, 0.80f, 0.35f));
         subLabel.alignment = TextAlignmentOptions.Left;
         ui.subtitle = subLabel;
 
         var objLabel = CreateLabelTopLeft(infoPanel.transform, "Objective",
             levelData.objective,
-            new Vector2(24f, -84f), new Vector2(372f, 115f), font, 13.5f, FontStyles.Normal,
+            new Vector2(24f, -78f), new Vector2(372f, 168f), font, 12f, FontStyles.Normal,
             new Color(0.85f, 0.92f, 1.0f));
         objLabel.alignment = TextAlignmentOptions.TopLeft;
         objLabel.textWrappingMode = TextWrappingModes.Normal;
-        objLabel.overflowMode = TextOverflowModes.Truncate;
-        objLabel.lineSpacing = 3f;
+        objLabel.overflowMode = TextOverflowModes.Ellipsis;
+        objLabel.lineSpacing = 2f;
         ui.objectiveText = objLabel;
 
         // Progress bar

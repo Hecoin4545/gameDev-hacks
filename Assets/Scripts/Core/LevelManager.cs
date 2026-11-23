@@ -87,6 +87,7 @@ public class LevelManager : MonoBehaviour
         string sn = SceneManager.GetActiveScene().name;
         if (sn.Contains("2")) levelIdx = 1;
         else if (sn.Contains("3")) levelIdx = 2;
+        else if (sn.Contains("4")) levelIdx = 3;
 
         // Start background music immediately
         AudioManager.Instance?.PlayBGMusic(levelIdx);

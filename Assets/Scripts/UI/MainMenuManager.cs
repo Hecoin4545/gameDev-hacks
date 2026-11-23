@@ -50,6 +50,11 @@ public class MainMenuManager : MonoBehaviour
             AudioManager.Instance?.PlayLevel3Click();
             StartCoroutine(LoadSceneDelayed("Level3", 0.20f, 2));
         }
+        else if (levelNumber == 4)
+        {
+            AudioManager.Instance?.PlayLevel3Click(); // reuse click sfx
+            StartCoroutine(LoadSceneDelayed("Level4", 0.20f, 3));
+        }
         else
         {
             AudioManager.Instance?.PlayLevelLocked();

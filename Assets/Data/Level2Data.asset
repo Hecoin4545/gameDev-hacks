@@ -17,7 +17,7 @@ MonoBehaviour:
   rows: 7
   columns: 5
   tileSize: 2.4
-  tileGap: 0.65
+  tileGap: 0.45
   timeLimit: 150
   safeTiles:
   - {x: 1, y: 2}

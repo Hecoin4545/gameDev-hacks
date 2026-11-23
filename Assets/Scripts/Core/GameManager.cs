@@ -53,6 +53,11 @@ public class GameManager : MonoBehaviour
                 currentLevelIndex = 2;
                 SceneManager.LoadScene("Level3");
             }
+            else if (currentScene == "Level3")
+            {
+                currentLevelIndex = 3;
+                SceneManager.LoadScene("Level4");
+            }
             else
             {
                 currentLevelIndex = 0;
