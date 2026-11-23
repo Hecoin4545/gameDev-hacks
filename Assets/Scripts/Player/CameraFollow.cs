@@ -21,6 +21,7 @@ public class CameraFollow : MonoBehaviour
     public float keyboardRotateSpeed = 110f;
     public float mouseSensitivity = 0.22f;
     public float zoomSensitivity = 0.012f;
+    public float trackpadYawSensitivity = 0.25f;
     public float followSmooth = 12f;
     public float rotationSmooth = 16f;
     public float targetHeight = 1.35f;
@@ -118,10 +119,16 @@ public class CameraFollow : MonoBehaviour
                 pitch -= d.y * mouseSensitivity;
             }
 
-            float scroll = Mouse.current.scroll.ReadValue().y;
-            if (Mathf.Abs(scroll) > 0.01f)
+            Vector2 scroll = Mouse.current.scroll.ReadValue();
+            if (Mathf.Abs(scroll.y) > 0.01f)
             {
-                distance = Mathf.Clamp(distance - scroll * zoomSensitivity, minDistance, maxDistance);
+                distance = Mathf.Clamp(distance - scroll.y * zoomSensitivity, minDistance, maxDistance);
+            }
+
+            // Trackpad two-finger horizontal pan rotates the camera.
+            if (Mathf.Abs(scroll.x) > 0.01f)
+            {
+                yaw += scroll.x * trackpadYawSensitivity;
             }
         }
 #endif
@@ -154,6 +161,7 @@ public class CameraFollow : MonoBehaviour
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
         if (yaw > 360f) yaw -= 360f;
         if (yaw < -360f) yaw += 360f;
+        if (Mathf.Abs(yaw) < 0.001f) yaw = 0f;
         distance = Mathf.Clamp(distance, minDistance, maxDistance);
     }
 }

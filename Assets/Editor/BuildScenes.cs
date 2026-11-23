@@ -15,7 +15,6 @@ public class BuildScenes
     static Material tileMat, stoneMat, stoneDarkMat, startGrassMat, endGrassMat, grassMat, grassDarkMat;
     static Material leafMat, leafLightMat, leafDeepMat, pineMat, pineLightMat, trunkMat, hillMat, mountainMat, mountainDarkMat, cloudMat, rockMat, goldMat;
     static Material hoodieMat, jeansMat, skinMat, hairMat, shoeMat, eyeMat, pupilMat, hoodMat;
-    static Material cyberFloorMat, cyberTileMat, cyberTileEdgeMat, cyberTileRockMat, startPadMat, goalPadMat, cyberPillarMat, cyberGlowCyanMat, cyberGlowMagentaMat;
 
     public static void Run()
     {
@@ -43,7 +42,7 @@ public class BuildScenes
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log("BuildScenes finished: MainMenu, Level1, Level2, and Level3 generated and configured in Build Settings.");
+        Debug.Log("BuildScenes finished: MainMenu, Level1, Level2, and Level3 generated with matching stylized nature theme.");
     }
 
     static void ConfigureButtonTextures()
@@ -61,16 +60,6 @@ public class BuildScenes
                 importer.filterMode = FilterMode.Bilinear;
                 importer.SaveAndReimport();
             }
-        }
-
-        string fullPath = "Assets/UI/LevelSelect/LevelMenuFull.png";
-        var fullImp = AssetImporter.GetAtPath(fullPath) as TextureImporter;
-        if (fullImp != null)
-        {
-            fullImp.textureType = TextureImporterType.Sprite;
-            fullImp.spriteImportMode = SpriteImportMode.Single;
-            fullImp.alphaIsTransparency = true;
-            fullImp.SaveAndReimport();
         }
     }
 
@@ -150,7 +139,7 @@ public class BuildScenes
         levelData.hideMapAfterCountdown = false;
         levelData.mapVisibleDuration = 6.0f;
         levelData.isUpsideDownPattern = false;
-        levelData.objective = "Study the mirrored PATH BLUEPRINT, then hop across the safe tiles to reach the golden finish island.";
+        levelData.objective = "Study the mirrored PATH MAP, then hop across the safe stone tiles to reach the golden finish island.";
         levelData.instructions = "WASD / Arrows - Move\nSpace - Jump\nMouse Drag / Q E - Rotate camera\nMouse Wheel - Zoom\nR - Restart\nESC - Level Select Menu";
         levelData.safeTiles = new List<Vector2Int> {
             new Vector2Int(1,1), new Vector2Int(2,2), new Vector2Int(3,3),
@@ -181,7 +170,7 @@ public class BuildScenes
         levelData.hideMapAfterCountdown = true;
         levelData.mapVisibleDuration = 6.0f;
         levelData.isUpsideDownPattern = false;
-        levelData.objective = "MEMORIZE THE PATH! The blueprint is visible for 6 seconds, then conceals. Walk the exact path from memory to clear the level.";
+        levelData.objective = "MEMORIZE THE PATH! The map is visible for 6 seconds, then conceals. Walk the exact path from memory to clear the level.";
         levelData.instructions = "WASD / Arrows - Move\nSpace - Jump\nMouse Drag / Q E - Rotate camera\nMouse Wheel - Zoom\nR - Restart\nESC - Level Select Menu";
         
         // 9-step winding path across 6x5 grid
@@ -221,7 +210,7 @@ public class BuildScenes
         levelData.hideMapAfterCountdown = true;
         levelData.mapVisibleDuration = 8.0f;
         levelData.isUpsideDownPattern = true;
-        levelData.objective = "UPSIDE-DOWN BLUEPRINT! Study the map for 8s. The arena rows are INVERTED: the LAST row on the blueprint must be jumped FIRST!";
+        levelData.objective = "UPSIDE-DOWN MEMORY! Study the blueprint for 8s. The physical rows are INVERTED: the LAST row on the blueprint must be jumped FIRST!";
         levelData.instructions = "WASD / Arrows - Move\nSpace - Jump\nMouse Drag / Q E - Rotate camera\nMouse Wheel - Zoom\nR - Restart\nESC - Level Select Menu\n<b>RULE:</b> Blueprint Top Row = Arena 1st Jump!";
 
         // Blueprint displayed pattern (shown on the map panel during the 8s countdown)
@@ -275,13 +264,22 @@ public class BuildScenes
         var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Fonts/Inter-Regular SDF.asset");
         var rounded = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/PanelRounded.png");
 
-        // Camera
+        // Camera with Skybox and view of the floating island paradise
         var camGo = new GameObject("Main Camera");
         var cam = camGo.AddComponent<Camera>();
         camGo.tag = "MainCamera";
         camGo.AddComponent<AudioListener>();
-        cam.clearFlags = CameraClearFlags.SolidColor;
-        cam.backgroundColor = new Color(0.04f, 0.06f, 0.09f, 1f);
+        cam.clearFlags = CameraClearFlags.Skybox;
+        cam.transform.position = new Vector3(0f, 6.5f, -14f);
+        cam.transform.rotation = Quaternion.Euler(14f, 0f, 0f);
+
+        ConfigureLighting();
+        ConfigurePostProcessing();
+
+        var envRoot = new GameObject("Environment").transform;
+        var cloudRoot = BuildEnvironment(envRoot);
+        var animator = envRoot.gameObject.AddComponent<EnvironmentAnimator>();
+        animator.cloudRoot = cloudRoot;
 
         // Canvas
         var canvasGo = new GameObject("Canvas");
@@ -296,21 +294,21 @@ public class BuildScenes
         var menuManager = canvasGo.AddComponent<MainMenuManager>();
         menuManager.levelButtons = new Button[10];
 
-        // Background subtle vignette/card
+        // Background subtle card letting the floating islands show through
         var bgPanel = CreatePanel(canvasGo.transform, "MenuCard",
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-            new Vector2(860f, 880f), Vector2.zero, rounded,
-            new Color(0.035f, 0.050f, 0.075f, 0.96f));
+            new Vector2(880f, 900f), Vector2.zero, rounded,
+            new Color(0.04f, 0.065f, 0.09f, 0.90f));
 
         CreateText(bgPanel.transform, "Title", "SELECT LEVEL", font, 48f,
-            new Vector2(0f, 380f), new Vector2(760f, 60f), TextAlignmentOptions.Center,
+            new Vector2(0f, 390f), new Vector2(780f, 60f), TextAlignmentOptions.Center,
             FontStyles.Bold, Color.white);
 
         CreateText(bgPanel.transform, "Subtitle", "CHOOSE A STAGE TO BEGIN YOUR MEMORY RUN", font, 16f,
-            new Vector2(0f, 332f), new Vector2(760f, 28f), TextAlignmentOptions.Center,
-            FontStyles.Bold, new Color(0.35f, 0.85f, 1.0f, 1f));
+            new Vector2(0f, 342f), new Vector2(780f, 28f), TextAlignmentOptions.Center,
+            FontStyles.Bold, new Color(0.35f, 0.92f, 0.55f, 1f));
 
-        CreateBar(bgPanel.transform, "Divider", new Vector2(0f, 305f), new Vector2(760f, 2f),
+        CreateBar(bgPanel.transform, "Divider", new Vector2(0f, 315f), new Vector2(780f, 2f),
             new Color(1f, 1f, 1f, 0.14f), rounded);
 
         // Button Grid Container
@@ -320,16 +318,16 @@ public class BuildScenes
         grt.anchorMin = new Vector2(0.5f, 0.5f);
         grt.anchorMax = new Vector2(0.5f, 0.5f);
         grt.pivot = new Vector2(0.5f, 0.5f);
-        grt.sizeDelta = new Vector2(720f, 530f);
-        grt.anchoredPosition = new Vector2(0f, 15f);
+        grt.sizeDelta = new Vector2(740f, 560f);
+        grt.anchoredPosition = new Vector2(0f, 12f);
 
-        float colWidth = 320f;
-        float btnHeight = 84f;
-        float gapX = 40f;
-        float gapY = 18f;
+        float colWidth = 330f;
+        float btnHeight = 92f;
+        float gapX = 36f;
+        float gapY = 16f;
 
         float startX = -((colWidth * 2f + gapX) * 0.5f) + (colWidth * 0.5f);
-        float startY = 180f;
+        float startY = 195f;
 
         for (int i = 0; i < 10; i++)
         {
@@ -362,7 +360,7 @@ public class BuildScenes
             else
             {
                 img.sprite = rounded;
-                img.color = new Color(0.85f, 0.45f, 0.15f);
+                img.color = new Color(0.18f, 0.75f, 0.35f);
             }
 
             var btn = btnGo.GetComponent<Button>();
@@ -370,43 +368,24 @@ public class BuildScenes
             if (levelNum <= 3)
             {
                 colors.normalColor = Color.white;
-                colors.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f);
-                colors.pressedColor = new Color(0.85f, 0.85f, 0.85f, 1f);
+                colors.highlightedColor = new Color(1.12f, 1.12f, 1.12f, 1f);
+                colors.pressedColor = new Color(0.88f, 0.88f, 0.88f, 1f);
                 colors.selectedColor = Color.white;
             }
             else
             {
-                // Locked levels visually dimmed
-                colors.normalColor = new Color(0.60f, 0.60f, 0.60f, 0.55f);
-                colors.highlightedColor = new Color(0.80f, 0.80f, 0.80f, 0.80f);
-                colors.pressedColor = new Color(0.50f, 0.50f, 0.50f, 0.80f);
+                colors.normalColor = new Color(0.85f, 0.85f, 0.85f, 0.85f);
+                colors.highlightedColor = new Color(0.95f, 0.95f, 0.95f, 0.90f);
+                colors.pressedColor = new Color(0.70f, 0.70f, 0.70f, 0.85f);
                 colors.selectedColor = colors.normalColor;
-
-                // Lock icon text tag
-                var lockGo = new GameObject("LockTag");
-                lockGo.transform.SetParent(btnGo.transform, false);
-                var lrt = lockGo.AddComponent<RectTransform>();
-                lrt.anchorMin = new Vector2(1f, 0.5f);
-                lrt.anchorMax = new Vector2(1f, 0.5f);
-                lrt.pivot = new Vector2(1f, 0.5f);
-                lrt.sizeDelta = new Vector2(90f, 26f);
-                lrt.anchoredPosition = new Vector2(-15f, 0f);
-                var lt = lockGo.AddComponent<TextMeshProUGUI>();
-                lt.text = "LOCKED";
-                lt.font = font;
-                lt.fontSize = 13f;
-                lt.fontStyle = FontStyles.Bold;
-                lt.color = new Color(1f, 0.82f, 0.40f, 0.95f);
-                lt.alignment = TextAlignmentOptions.Right;
-                lt.raycastTarget = false;
             }
             btn.colors = colors;
             menuManager.levelButtons[i] = btn;
         }
 
         // Footer Instructions / Info
-        CreateText(bgPanel.transform, "Footer", "LEVEL 1: Path Finder   |   LEVEL 2: 6s Memory Conceal   |   LEVEL 3: Upside-Down Cyber Grid", font, 14f,
-            new Vector2(0f, -370f), new Vector2(760f, 34f), TextAlignmentOptions.Center,
+        CreateText(bgPanel.transform, "Footer", "LEVEL 1: Path Finder   |   LEVEL 2: 6s Memory Conceal   |   LEVEL 3: Upside-Down Memory Run", font, 14f,
+            new Vector2(0f, -380f), new Vector2(780f, 34f), TextAlignmentOptions.Center,
             FontStyles.Bold, new Color(0.82f, 0.88f, 0.94f, 1f));
 
         // Toast Popup for locked levels
@@ -454,6 +433,10 @@ public class BuildScenes
         gridManager.unsafeMat = tileMat;
         gridManager.tileEdgeMat = stoneMat;
         gridManager.tileRockMat = stoneDarkMat;
+        gridManager.useHexTiles = false;
+        gridManager.customNeutralColor = new Color(0.055f, 0.062f, 0.068f);
+        gridManager.customCompletedColor = new Color(0.085f, 0.092f, 0.098f);
+        gridManager.customCompletedEmission = Color.black;
 
         float stride = levelData.tileSize + levelData.tileGap;
         float gridDepth = (levelData.rows - 1) * stride;
@@ -553,6 +536,10 @@ public class BuildScenes
         gridManager.unsafeMat = tileMat;
         gridManager.tileEdgeMat = stoneMat;
         gridManager.tileRockMat = stoneDarkMat;
+        gridManager.useHexTiles = false;
+        gridManager.customNeutralColor = new Color(0.055f, 0.062f, 0.068f);
+        gridManager.customCompletedColor = new Color(0.085f, 0.092f, 0.098f);
+        gridManager.customCompletedEmission = Color.black;
 
         float stride = levelData.tileSize + levelData.tileGap;
         float gridDepth = (levelData.rows - 1) * stride;
@@ -640,7 +627,7 @@ public class BuildScenes
     }
 
     // =========================================================================
-    // LEVEL 3 SCENE (CYBER GRID & UPSIDE-DOWN BLUEPRINT)
+    // LEVEL 3 SCENE (STYLIZED ISLAND THEME MATCHING LEVEL 1 & 2)
     // =========================================================================
     static void BuildLevel3Scene(LevelData levelData)
     {
@@ -648,74 +635,43 @@ public class BuildScenes
 
         var gridRoot = new GameObject("Grid");
         var gridManager = gridRoot.AddComponent<GridManager>();
-        gridManager.useHexTiles = true;
-        gridManager.customNeutralColor = new Color(0.08f, 0.09f, 0.12f);
-        gridManager.customCompletedColor = new Color(0.05f, 0.90f, 1.00f);
-        gridManager.customCompletedEmission = new Color(0.00f, 0.85f, 1.00f) * 2.2f;
-        gridManager.safeMat = cyberTileMat;
-        gridManager.unsafeMat = cyberTileMat;
-        gridManager.tileEdgeMat = cyberTileEdgeMat;
-        gridManager.tileRockMat = cyberTileRockMat;
+        gridManager.safeMat = tileMat;
+        gridManager.unsafeMat = tileMat;
+        gridManager.tileEdgeMat = stoneMat;
+        gridManager.tileRockMat = stoneDarkMat;
+        gridManager.useHexTiles = false;
+        gridManager.customNeutralColor = new Color(0.055f, 0.062f, 0.068f);
+        gridManager.customCompletedColor = new Color(0.085f, 0.092f, 0.098f);
+        gridManager.customCompletedEmission = Color.black;
 
         float stride = levelData.tileSize + levelData.tileGap;
         float gridDepth = (levelData.rows - 1) * stride;
 
-        // START Platform (Hexagonal Pad glowing green with "START" sign)
-        Vector3 startPos = new Vector3(0f, 0.12f, -gridDepth * 0.5f - 3.8f);
-        var startPad = new GameObject("StartPad");
-        startPad.transform.position = startPos;
-        var startMf = startPad.AddComponent<MeshFilter>();
-        startMf.sharedMesh = HexPrismMesh.Create(3.2f, 0.35f, 0.08f);
-        var startMr = startPad.AddComponent<MeshRenderer>();
-        startMr.sharedMaterial = startPadMat;
-        var startBox = startPad.AddComponent<BoxCollider>();
-        startBox.size = new Vector3(5.5f, 0.35f, 5.5f);
+        // Floating grass islands matching Level 1 & 2
+        var startIsland = CreateIsland("StartIsland", null, new Vector3(0f, 0.11f, -gridDepth * 0.5f - 3.8f),
+            6.2f, 4.4f, startGrassMat, stoneMat, stoneDarkMat, true);
+        var endIsland = CreateIsland("EndIsland", null, new Vector3(0f, 0.11f, gridDepth * 0.5f + 3.8f),
+            6.2f, 4.4f, endGrassMat, stoneMat, stoneDarkMat, true);
 
-        CreateWorldText(startPad.transform, "StartText", "START", 
-            new Vector3(0f, 0.22f, 0f), Quaternion.Euler(90f, 0f, 0f), 
-            new Color(0.05f, 0.25f, 0.10f), 6.5f);
-
-        // GOAL Platform (Hexagonal Pad glowing amber/gold with "GOAL" sign)
-        Vector3 endPos = new Vector3(0f, 0.12f, gridDepth * 0.5f + 3.8f);
-        var endPad = new GameObject("GoalPad");
-        endPad.transform.position = endPos;
-        var endMf = endPad.AddComponent<MeshFilter>();
-        endMf.sharedMesh = HexPrismMesh.Create(3.2f, 0.35f, 0.08f);
-        var endMr = endPad.AddComponent<MeshRenderer>();
-        endMr.sharedMaterial = goalPadMat;
-        var endBox = endPad.AddComponent<BoxCollider>();
-        endBox.size = new Vector3(5.5f, 0.35f, 5.5f);
-
-        CreateWorldText(endPad.transform, "GoalText", "GOAL", 
-            new Vector3(0f, 0.22f, 0f), Quaternion.Euler(90f, 0f, 0f), 
-            new Color(0.25f, 0.18f, 0.03f), 6.5f);
-
-        var marker = CreatePrimitive(PrimitiveType.Cube, "GoalMarker", endPad.transform,
-            new Vector3(0f, 2.5f, 0f), new Vector3(0.65f, 0.65f, 0.65f), goalPadMat, false);
+        var pad = CreateBeveledObject("GoalPad", endIsland.transform,
+            new Vector3(0f, 0.055f, 0f),
+            new Vector3(2.4f, 0.11f, 2.4f), 0.05f, goldMat, false);
+        var marker = CreatePrimitive(PrimitiveType.Cube, "GoalMarker", endIsland.transform,
+            new Vector3(0f, 2.4f, 0f), new Vector3(0.6f, 0.6f, 0.6f), goldMat, false);
         marker.transform.localRotation = Quaternion.Euler(0f, 45f, 45f);
 
         var endTrigger = new GameObject("EndTrigger");
-        endTrigger.transform.SetParent(endPad.transform, false);
+        endTrigger.transform.SetParent(endIsland.transform, false);
         endTrigger.transform.localPosition = new Vector3(0f, 1.6f, 0f);
-        var triggerBox = endTrigger.AddComponent<BoxCollider>();
-        triggerBox.size = new Vector3(5.5f, 3.5f, 5.5f);
-        triggerBox.isTrigger = true;
+        var endBox = endTrigger.AddComponent<BoxCollider>();
+        endBox.size = new Vector3(5.2f, 3.4f, 3.6f);
+        endBox.isTrigger = true;
         endTrigger.AddComponent<EndPlatformTrigger>();
 
-        // Build the hex grid
         gridManager.Build(levelData);
 
-        // Dark cyber arena base floor below grid
-        var arenaFloor = CreatePrimitive(PrimitiveType.Cube, "CyberArenaFloor", null,
-            new Vector3(0f, -0.6f, 0f), new Vector3(24f, 0.5f, 32f), cyberFloorMat, true);
+        var player = BuildPlayer(startIsland.transform.position + Vector3.up * 1.6f);
 
-        // Cyber boundary glow trims and corner pillars
-        CreateCyberArenaDecor(arenaFloor.transform);
-
-        // Player
-        var player = BuildPlayer(startPos + Vector3.up * 1.6f);
-
-        // Camera
         var camGo = new GameObject("Main Camera");
         var cam = camGo.AddComponent<Camera>();
         camGo.tag = "MainCamera";
@@ -725,29 +681,31 @@ public class BuildScenes
         cam.farClipPlane = 600f;
         cam.allowHDR = true;
         cam.allowMSAA = true;
-        cam.clearFlags = CameraClearFlags.SolidColor;
-        cam.backgroundColor = new Color(0.015f, 0.025f, 0.05f, 1f); // Deep cyber midnight
-        cam.transform.position = new Vector3(0f, 14f, -24f);
+        cam.clearFlags = CameraClearFlags.Skybox;
+        cam.transform.position = new Vector3(0f, 13f, -22f);
 
         var cf = camGo.AddComponent<CameraFollow>();
         cf.target = player.transform;
-        cf.distance = 15.5f;
+        cf.distance = 15f;
         cf.pitch = 42f;
         cf.yaw = 0f;
         cf.targetHeight = 1.35f;
         cf.lookAhead = 4.2f;
         player.GetComponent<PlayerController>().cameraTransform = cam.transform;
 
-        // Cyber Lighting
-        ConfigureCyberLighting();
+        ConfigureLighting();
+        ConfigurePostProcessing();
+
+        var envRoot = new GameObject("Environment").transform;
+        var cloudRoot = BuildEnvironment(envRoot);
 
         var lmGo = new GameObject("LevelManager");
         var lm = lmGo.AddComponent<LevelManager>();
         lm.data = levelData;
         lm.gridManager = gridManager;
         lm.player = player.GetComponent<PlayerController>();
-        lm.startPlatform = startPad.transform;
-        lm.endPlatform = endPad.transform;
+        lm.startPlatform = startIsland.transform;
+        lm.endPlatform = endIsland.transform;
 
         var gmGo = new GameObject("GameManager");
         var gm = gmGo.AddComponent<GameManager>();
@@ -766,73 +724,10 @@ public class BuildScenes
         if (inputModuleType != null) es.AddComponent(inputModuleType);
         else es.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
 
+        var animator = envRoot.gameObject.AddComponent<EnvironmentAnimator>();
+        animator.cloudRoot = cloudRoot;
+
         EditorSceneManager.SaveScene(scene, "Assets/Scenes/Level3.unity");
-    }
-
-    static void CreateCyberArenaDecor(Transform floor)
-    {
-        float hw = 12f;
-        float hd = 16f;
-        Vector3[] corners = new Vector3[] {
-            new Vector3(-hw, 0f, -hd),
-            new Vector3(hw, 0f, -hd),
-            new Vector3(-hw, 0f, hd),
-            new Vector3(hw, 0f, hd)
-        };
-
-        for (int i = 0; i < corners.Length; i++)
-        {
-            var pillar = CreatePrimitive(PrimitiveType.Cylinder, "CyberPillar_" + i, null,
-                corners[i] + new Vector3(0f, 4f, 0f), new Vector3(1.4f, 4.5f, 1.4f), cyberPillarMat, true);
-            // Cyan ring
-            CreatePrimitive(PrimitiveType.Cylinder, "PillarRing1", pillar.transform,
-                new Vector3(0f, 0.4f, 0f), new Vector3(1.15f, 0.08f, 1.15f), cyberGlowCyanMat, false);
-            // Magenta ring
-            CreatePrimitive(PrimitiveType.Cylinder, "PillarRing2", pillar.transform,
-                new Vector3(0f, -0.4f, 0f), new Vector3(1.15f, 0.08f, 1.15f), cyberGlowMagentaMat, false);
-        }
-
-        // Circuit border rails
-        CreatePrimitive(PrimitiveType.Cube, "BorderRailL", null,
-            new Vector3(-hw - 0.4f, 0.1f, 0f), new Vector3(0.35f, 0.25f, hd * 2f), cyberGlowCyanMat, false);
-        CreatePrimitive(PrimitiveType.Cube, "BorderRailR", null,
-            new Vector3(hw + 0.4f, 0.1f, 0f), new Vector3(0.35f, 0.25f, hd * 2f), cyberGlowCyanMat, false);
-    }
-
-    static void ConfigureCyberLighting()
-    {
-        RenderSettings.ambientMode = AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.04f, 0.07f, 0.14f);
-
-        var lightGo = new GameObject("Directional Light");
-        var l = lightGo.AddComponent<Light>();
-        l.type = LightType.Directional;
-        l.color = new Color(0.35f, 0.80f, 1.0f);
-        l.intensity = 1.15f;
-        lightGo.transform.rotation = Quaternion.Euler(48f, -35f, 0f);
-
-        var fillGo = new GameObject("Magenta Rim Light");
-        var fill = fillGo.AddComponent<Light>();
-        fill.type = LightType.Directional;
-        fill.color = new Color(0.85f, 0.25f, 0.90f);
-        fill.intensity = 0.55f;
-        fillGo.transform.rotation = Quaternion.Euler(30f, 145f, 0f);
-    }
-
-    static void CreateWorldText(Transform parent, string name, string text, Vector3 localPos, Quaternion localRot, Color color, float size)
-    {
-        var go = new GameObject(name);
-        go.transform.SetParent(parent, false);
-        go.transform.localPosition = localPos;
-        go.transform.localRotation = localRot;
-        var t = go.AddComponent<TextMeshPro>();
-        var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Fonts/Inter-Regular SDF.asset");
-        if (font != null) t.font = font;
-        t.text = text;
-        t.fontSize = size;
-        t.fontStyle = FontStyles.Bold;
-        t.color = color;
-        t.alignment = TextAlignmentOptions.Center;
     }
 
     // =========================================================================
@@ -866,14 +761,14 @@ public class BuildScenes
             new Vector2(380f, 860f), new Vector2(30f, 0f), rounded,
             new Color(0.04f, 0.06f, 0.09f, 0.94f));
 
-        CreateText(mapPanel.transform, "MapTitle", "PATH BLUEPRINT", font, 32f,
+        CreateText(mapPanel.transform, "MapTitle", "PATH MAP", font, 32f,
             new Vector2(0f, 380f), new Vector2(330f, 42f), TextAlignmentOptions.Left,
             FontStyles.Bold, Color.white);
 
         string initialStatus = data.isUpsideDownPattern 
             ? "UPSIDE-DOWN BLUEPRINT: 8.0s"
             : (data.hideMapAfterCountdown ? "MEMORIZE PATH: 6.0s" : "LIVE PATH GUIDANCE");
-        Color statusColor = data.isUpsideDownPattern ? new Color(0.35f, 0.85f, 1f, 1f) : new Color(0.40f, 0.95f, 0.55f, 1f);
+        Color statusColor = new Color(0.35f, 0.92f, 0.55f, 1f);
 
         ui.mapStatusText = CreateText(mapPanel.transform, "MapStatus",
             initialStatus, font, 15f, new Vector2(0f, 340f), new Vector2(330f, 26f), TextAlignmentOptions.Left,
@@ -882,7 +777,7 @@ public class BuildScenes
         CreateBar(mapPanel.transform, "MapDivider", new Vector2(0f, 314f), new Vector2(330f, 2f),
             new Color(1f, 1f, 1f, 0.14f), rounded);
 
-        CreateText(mapPanel.transform, "FinishTag", "GOAL / FINISH", font, 14f,
+        CreateText(mapPanel.transform, "FinishTag", "FINISH", font, 14f,
             new Vector2(0f, 240f), new Vector2(330f, 20f), TextAlignmentOptions.Center,
             FontStyles.Bold, new Color(1.0f, 0.82f, 0.35f, 1f));
 
@@ -910,11 +805,11 @@ public class BuildScenes
         markerGo.SetActive(false);
         ui.playerMarker = markerImg;
 
-        CreateText(mapPanel.transform, "StartTag", "START PLATFORM", font, 14f,
+        CreateText(mapPanel.transform, "StartTag", "START", font, 14f,
             new Vector2(0f, -210f), new Vector2(330f, 20f), TextAlignmentOptions.Center,
             FontStyles.Bold, new Color(0.35f, 0.85f, 1.0f, 1f));
 
-        Color legendSafe = data.isUpsideDownPattern ? new Color(0.0f, 0.92f, 1.0f) : new Color(0.24f, 0.90f, 0.44f);
+        Color legendSafe = new Color(0.24f, 0.90f, 0.44f);
         CreateSwatch(mapPanel.transform, "SafeSwatch", new Vector2(-95f, -255f),
             new Vector2(18f, 18f), legendSafe, rounded);
         CreateText(mapPanel.transform, "SafeLabel", "SAFE", font, 14f,
@@ -928,7 +823,7 @@ public class BuildScenes
             FontStyles.Bold, Color.white);
 
         string hintStr = data.isUpsideDownPattern
-            ? "INVERTED: Blueprint Top Row = Arena 1st Jump!"
+            ? "INVERTED: Top blueprint row = 1st jump in the arena."
             : (data.hideMapAfterCountdown ? "Memorize before the path conceals!" : "The map mirrors what you see in the course.");
         ui.mapHintText = CreateText(mapPanel.transform, "MapHint",
             hintStr, font, 13.5f, new Vector2(0f, -305f), new Vector2(330f, 38f), TextAlignmentOptions.Center,
@@ -945,9 +840,9 @@ public class BuildScenes
             FontStyles.Bold, Color.white);
 
         string subText = data.isUpsideDownPattern 
-            ? "UPSIDE-DOWN BLUEPRINT"
+            ? "UPSIDE-DOWN MEMORY"
             : (data.hideMapAfterCountdown ? "MEMORY CHALLENGE" : "PATH FINDER");
-        Color subColor = data.isUpsideDownPattern ? new Color(0.35f, 0.85f, 1f, 1f) : new Color(0.33f, 0.94f, 0.52f, 1f);
+        Color subColor = new Color(0.33f, 0.94f, 0.52f, 1f);
 
         ui.subtitle = CreateText(infoPanel.transform, "Subtitle",
             subText, font, 18f, new Vector2(0f, 365f), new Vector2(420f, 26f), TextAlignmentOptions.Left,
@@ -1031,7 +926,7 @@ public class BuildScenes
         menuBtn.onClick.AddListener(() => lm.LoadMainMenu());
         ui.menuButton = menuBtn;
 
-        CreateText(infoPanel.transform, "FooterHint", "Reach the illuminated finish platform once all safe tiles are cleared.", font, 13.5f,
+        CreateText(infoPanel.transform, "FooterHint", "Reach the golden finish island once all safe tiles are cleared.", font, 13.5f,
             new Vector2(0f, -368f), new Vector2(420f, 32f), TextAlignmentOptions.Center,
             FontStyles.Bold, new Color(0.80f, 0.86f, 0.92f, 1f));
 
@@ -1046,7 +941,7 @@ public class BuildScenes
             FontStyles.Bold, new Color(0.29f, 0.87f, 0.50f, 1f));
 
         string sub = data.sceneName == "Level3" 
-            ? "Master of spatial inversion! Cyber grid conquered."
+            ? "Brilliant memory run! Inverted challenge cleared."
             : (data.sceneName == "Level2" ? "Brilliant memory run! You cleared the challenge." : "Safe path mastered — beautiful work.");
 
         CreateText(complete.transform, "CompleteSub", sub, font, 18f,
@@ -1566,17 +1461,6 @@ public class BuildScenes
         shoeMat = LoadOrCreateMaterial("Assets/Materials/Shoe.mat", new Color(0.93f, 0.94f, 0.95f), 0f, 0.35f, 0f);
         eyeMat = LoadOrCreateMaterial("Assets/Materials/Eye.mat", Color.white, 0f, 0.4f, 0f);
         pupilMat = LoadOrCreateMaterial("Assets/Materials/Pupil.mat", new Color(0.06f, 0.06f, 0.08f), 0f, 0.4f, 0f);
-
-        // Cyber Materials for Level 3
-        cyberFloorMat = LoadOrCreateMaterial("Assets/Materials/CyberFloor.mat", new Color(0.035f, 0.045f, 0.075f), 0.7f, 0.65f, 0f);
-        cyberTileMat = LoadOrCreateMaterial("Assets/Materials/CyberTile.mat", new Color(0.08f, 0.09f, 0.12f), 0.5f, 0.5f, 0f);
-        cyberTileEdgeMat = LoadOrCreateMaterial("Assets/Materials/CyberTileEdge.mat", new Color(0.14f, 0.16f, 0.22f), 0.6f, 0.6f, 0f);
-        cyberTileRockMat = LoadOrCreateMaterial("Assets/Materials/CyberTileRock.mat", new Color(0.05f, 0.06f, 0.09f), 0.4f, 0.4f, 0f);
-        startPadMat = LoadOrCreateMaterial("Assets/Materials/StartPad.mat", new Color(0.12f, 0.95f, 0.42f), 0.2f, 0.7f, 2.2f);
-        goalPadMat = LoadOrCreateMaterial("Assets/Materials/GoalPad.mat", new Color(1.0f, 0.75f, 0.20f), 0.3f, 0.8f, 2.4f);
-        cyberPillarMat = LoadOrCreateMaterial("Assets/Materials/CyberPillar.mat", new Color(0.06f, 0.07f, 0.11f), 0.8f, 0.7f, 0f);
-        cyberGlowCyanMat = LoadOrCreateMaterial("Assets/Materials/CyberGlowCyan.mat", new Color(0.00f, 0.85f, 1.00f), 0.1f, 0.9f, 2.8f);
-        cyberGlowMagentaMat = LoadOrCreateMaterial("Assets/Materials/CyberGlowMagenta.mat", new Color(0.90f, 0.15f, 0.85f), 0.1f, 0.9f, 2.8f);
     }
 
     static Material LoadOrCreateMaterial(string path, Color baseColor, float metallic, float smoothness, float emission)

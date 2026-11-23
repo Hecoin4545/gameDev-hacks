@@ -40,13 +40,12 @@ public class UIManager : MonoBehaviour
     private int mapCols;
     private float markerPulse;
     private bool isUpsideDown = false;
-    private bool mapConcealed = false;
 
     private static readonly Color SafeColor = new Color(0.18f, 0.95f, 0.50f, 1f);
-    private static readonly Color SafeCyberColor = new Color(0.00f, 0.92f, 1.00f, 1f);
-    private static readonly Color UnsafeColor = new Color(0.12f, 0.15f, 0.19f, 1f);
+    private static readonly Color SafeCyberColor = new Color(0.34f, 1.00f, 0.58f, 1f);
+    private static readonly Color UnsafeColor = new Color(0.17f, 0.19f, 0.22f, 1f);
     private static readonly Color CompletedColor = new Color(0.45f, 1.00f, 0.70f, 1f);
-    private static readonly Color ConcealedColor = new Color(0.10f, 0.12f, 0.15f, 1f);
+    private static readonly Color ConcealedColor = new Color(0.13f, 0.15f, 0.18f, 1f);
 
     void Start()
     {
@@ -99,7 +98,7 @@ public class UIManager : MonoBehaviour
         if (subtitle != null)
         {
             if (data.isUpsideDownPattern)
-                subtitle.text = "UPSIDE-DOWN BLUEPRINT";
+                subtitle.text = "UPSIDE-DOWN MEMORY";
             else if (data.hideMapAfterCountdown)
                 subtitle.text = "MEMORY CHALLENGE";
             else
@@ -115,7 +114,7 @@ public class UIManager : MonoBehaviour
             if (mapHintText != null)
             {
                 if (data.isUpsideDownPattern)
-                    mapHintText.text = "Memorize rows in reverse: Top blueprint row = 1st jump in arena!";
+                    mapHintText.text = "Top blueprint row = 1st jump in the arena.";
                 else
                     mapHintText.text = "Memorize before the path conceals!";
             }
@@ -142,8 +141,6 @@ public class UIManager : MonoBehaviour
         cellImages.Clear();
         safeCellKeys.Clear();
         completedCellKeys.Clear();
-        mapConcealed = false;
-
         mapRows = data.rows;
         mapCols = data.columns;
         isUpsideDown = data.isUpsideDownPattern;
@@ -161,14 +158,16 @@ public class UIManager : MonoBehaviour
         float containerW = containerRect != null ? containerRect.sizeDelta.x : 320f;
         float containerH = containerRect != null ? containerRect.sizeDelta.y : 420f;
         float spacing = 8f;
-        float cellW = Mathf.Floor(Mathf.Min(56f, (containerW - 74f - (mapCols - 1) * spacing) / mapCols));
+        float labelReserve = 72f;
+        float cellW = Mathf.Floor(Mathf.Min(56f, (containerW - labelReserve - (mapCols - 1) * spacing) / mapCols));
         float cellH = Mathf.Floor(Mathf.Min(56f, (containerH - 74f - (mapRows - 1) * spacing) / mapRows));
         float cell = Mathf.Max(Mathf.Min(cellW, cellH), 32f);
 
         float totalW = mapCols * cell + (mapCols - 1) * spacing;
         float totalH = mapRows * cell + (mapRows - 1) * spacing;
+        float gridLeft = -containerW * 0.5f + labelReserve;
 
-        Color activeSafeColor = isUpsideDown ? SafeCyberColor : SafeColor;
+        Color activeSafeColor = SafeColor;
 
         for (int dr = 0; dr < mapRows; dr++)
         {
@@ -177,7 +176,7 @@ public class UIManager : MonoBehaviour
             for (int c = 0; c < mapCols; c++)
             {
                 int col = c + 1;
-                float x = -totalW * 0.5f + cell * 0.5f + c * (cell + spacing) + 16f;
+                float x = gridLeft + cell * 0.5f + c * (cell + spacing);
                 float y = totalH * 0.5f - cell * 0.5f - dr * (cell + spacing) - 10f;
 
                 var go = new GameObject(string.Format("MapCell_R{0}_C{1}", row, col), typeof(RectTransform), typeof(Image));
@@ -208,8 +207,8 @@ public class UIManager : MonoBehaviour
                 {
                     var label = CreateLabel(mapContainer, "Col" + col, "C" + col,
                         new Vector2(x, totalH * 0.5f + 18f), new Vector2(cell, 24f));
-                    label.color = new Color(0.35f, 0.85f, 1f, 1f);
-                    label.fontSize = 14f;
+                    label.color = new Color(0.74f, 0.79f, 0.84f, 1f);
+                    label.fontSize = 15.5f;
                     label.fontStyle = FontStyles.Bold;
                 }
             }
@@ -229,9 +228,9 @@ public class UIManager : MonoBehaviour
                 }
 
                 var rowLabel = CreateLabel(mapContainer, "Row" + row, rowText,
-                    new Vector2(-totalW * 0.5f - 24f, y), new Vector2(62f, 22f));
-                rowLabel.color = isUpsideDown ? new Color(1f, 0.85f, 0.35f, 1f) : new Color(0.70f, 0.85f, 0.95f, 1f);
-                rowLabel.fontSize = isUpsideDown ? 11.5f : 13f;
+                    new Vector2(gridLeft - 47f, y), new Vector2(82f, 22f));
+                rowLabel.color = isUpsideDown ? new Color(1f, 0.85f, 0.35f, 1f) : new Color(0.74f, 0.79f, 0.84f, 1f);
+                rowLabel.fontSize = isUpsideDown ? 12.5f : 14.5f;
                 rowLabel.fontStyle = FontStyles.Bold;
                 rowLabel.alignment = TextAlignmentOptions.Right;
             }
@@ -257,8 +256,8 @@ public class UIManager : MonoBehaviour
             else
             {
                 mapStatusText.text = isUpsideDown
-                    ? "BLUEPRINT CONCEALED - JUMP REVERSE ROWS!"
-                    : "PATH CONCEALED - WALK FROM MEMORY!";
+                    ? "BLUEPRINT HIDDEN \u00b7 REVERSE ROWS"
+                    : "PATH HIDDEN \u00b7 WALK FROM MEMORY";
                 mapStatusText.color = new Color(1f, 0.82f, 0.28f);
             }
         }
@@ -266,7 +265,6 @@ public class UIManager : MonoBehaviour
 
     public void ConcealMap()
     {
-        mapConcealed = true;
         foreach (var kvp in cellImages)
         {
             if (!completedCellKeys.Contains(kvp.Key))
@@ -278,15 +276,15 @@ public class UIManager : MonoBehaviour
         if (mapStatusText != null)
         {
             mapStatusText.text = isUpsideDown
-                ? "BLUEPRINT CONCEALED - JUMP REVERSE ROWS!"
-                : "PATH CONCEALED - WALK FROM MEMORY!";
+                ? "BLUEPRINT HIDDEN \u00b7 REVERSE ROWS"
+                : "PATH HIDDEN \u00b7 WALK FROM MEMORY";
             mapStatusText.color = new Color(1f, 0.82f, 0.28f);
         }
 
         if (mapHintText != null)
         {
             mapHintText.text = isUpsideDown
-                ? "Recall: Top blueprint row was jumped on arena row 1!"
+                ? "Top blueprint row = 1st jump in the arena."
                 : "Memory test: recall the safe green path!";
         }
     }
@@ -322,7 +320,7 @@ public class UIManager : MonoBehaviour
         Image img;
         if (cellImages.TryGetValue(key, out img))
         {
-            img.color = isUpsideDown ? SafeCyberColor : CompletedColor;
+            img.color = CompletedColor;
         }
     }
 

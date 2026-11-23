@@ -6,6 +6,7 @@ public class GridManager : MonoBehaviour
     public Material unsafeMat;
     public Material tileEdgeMat;
     public Material tileRockMat;
+    public Material tileRimMat;
 
     public bool useHexTiles = false;
     public Color customNeutralColor = new Color(0.055f, 0.062f, 0.068f);
@@ -56,6 +57,15 @@ public class GridManager : MonoBehaviour
                 var box = go.AddComponent<BoxCollider>();
                 box.size = new Vector3(size, slabHeight, size);
                 box.center = Vector3.zero;
+
+                // Dark separation rim peeking out under the top plate.
+                if (!useHexTiles && tileRimMat != null)
+                {
+                    const float rimHeight = 0.07f;
+                    Mesh rimMesh = BeveledBoxMesh.Create(size * 1.05f, rimHeight, size * 1.05f, 0.03f);
+                    AddMeshChild(go.transform, "Rim", rimMesh, tileRimMat,
+                        new Vector3(0f, -slabTop - rimHeight * 0.5f, 0f));
+                }
 
                 // Chunky stone/metal base
                 float baseHeight = 1.05f;

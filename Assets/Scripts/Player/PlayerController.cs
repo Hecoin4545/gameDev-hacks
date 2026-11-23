@@ -70,6 +70,7 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        if (!cc.enabled || !gameObject.activeInHierarchy) return;
         IsGrounded = cc.isGrounded;
         if (IsGrounded && velocity.y < 0f) velocity.y = -2f;
 
