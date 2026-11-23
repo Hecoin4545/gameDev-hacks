@@ -14,45 +14,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LevelData
   levelName: Level 2
   sceneName: Level2
-  rows: 6
+  rows: 7
   columns: 5
   tileSize: 2.4
-  tileGap: 0.6
-  timeLimit: 120
+  tileGap: 0.65
+  timeLimit: 150
   safeTiles:
   - {x: 1, y: 2}
-  - {x: 2, y: 2}
   - {x: 2, y: 4}
-  - {x: 3, y: 4}
-  - {x: 4, y: 4}
-  - {x: 4, y: 2}
-  - {x: 5, y: 2}
+  - {x: 3, y: 3}
+  - {x: 4, y: 1}
   - {x: 5, y: 3}
-  - {x: 6, y: 3}
+  - {x: 6, y: 5}
+  - {x: 7, y: 2}
   sequence:
   - {x: 1, y: 2}
-  - {x: 2, y: 2}
   - {x: 2, y: 4}
-  - {x: 3, y: 4}
-  - {x: 4, y: 4}
-  - {x: 4, y: 2}
-  - {x: 5, y: 2}
+  - {x: 3, y: 3}
+  - {x: 4, y: 1}
   - {x: 5, y: 3}
-  - {x: 6, y: 3}
-  objective: MEMORIZE THE PATH! The map is visible for 6 seconds, then conceals. Walk the exact path from memory to clear the level.
-  instructions: 'WASD / Arrows - Move
-
-    Space - Jump
-
-    Mouse Drag / Q E - Rotate camera
-
-    Mouse Wheel - Zoom
-
-    R - Restart
-
-    ESC - Level Select Menu'
+  - {x: 6, y: 5}
+  - {x: 7, y: 2}
+  objective: The desert sands hide deadly traps. Memorize the path in 5 SECONDS before it disappears, then walk the path from memory to reach the golden oasis!
+  instructions: "WASD / Arrows \u2013 Move\nSpace \u2013 Jump\nRight drag / Q E \u2013 Rotate camera\nMouse wheel \u2013 Zoom\nR \u2013 Restart\nF \u2013 Dance"
   hideMapAfterCountdown: 1
-  mapVisibleDuration: 6
+  mapVisibleDuration: 5
   isUpsideDownPattern: 0
   displayedPattern:
   - {x: 1, y: 2}

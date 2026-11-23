@@ -35,8 +35,8 @@ public class BuildScenes
 
         BuildMainMenuScene();
         BuildLevel1Scene(l1Data);
-        BuildLevel2Scene(l2Data);
-        BuildLevel3Scene(l3Data);
+        BuildLevel2.Run();
+        BuildLevel3.Run();
 
         UpdateBuildSettings();
 

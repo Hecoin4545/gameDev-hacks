@@ -17,8 +17,8 @@ MonoBehaviour:
   rows: 6
   columns: 5
   tileSize: 2.4
-  tileGap: 0.6
-  timeLimit: 120
+  tileGap: 0.65
+  timeLimit: 150
   safeTiles:
   - {x: 1, y: 4}
   - {x: 2, y: 4}
@@ -37,20 +37,8 @@ MonoBehaviour:
   - {x: 4, y: 2}
   - {x: 5, y: 2}
   - {x: 6, y: 2}
-  objective: 'UPSIDE-DOWN MEMORY! Study the blueprint for 8s. The physical rows are INVERTED: the LAST row on the blueprint must be jumped FIRST!'
-  instructions: 'WASD / Arrows - Move
-
-    Space - Jump
-
-    Mouse Drag / Q E - Rotate camera
-
-    Mouse Wheel - Zoom
-
-    R - Restart
-
-    ESC - Level Select Menu
-
-    <b>RULE:</b> Blueprint Top Row = Arena 1st Jump!'
+  objective: 'GLACIAL REVERSE TRIAL! Study the frost blueprint for 8s through the snowfall. The frozen rows are INVERTED: the top blueprint row is your 1st jump on the glacier!'
+  instructions: "WASD / Arrows \u2013 Move\nSpace \u2013 Jump\nRight drag / Q E \u2013 Rotate camera\nMouse wheel \u2013 Zoom\nR \u2013 Restart\nF \u2013 Dance\n<b>RULE:</b> Blueprint Top Row = Arena 1st Jump!"
   hideMapAfterCountdown: 1
   mapVisibleDuration: 8
   isUpsideDownPattern: 1
