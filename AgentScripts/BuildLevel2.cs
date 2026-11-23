@@ -257,7 +257,7 @@ public class BuildLevel2
             new Vector2Int(4, 1),
             new Vector2Int(5, 3),
             new Vector2Int(6, 5),
-            new Vector2Int(7, 2),
+            new Vector2Int(7, 4),
         };
         d.sequence = new List<Vector2Int>(d.safeTiles);
         EditorUtility.SetDirty(d);

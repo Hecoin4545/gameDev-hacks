@@ -1086,34 +1086,41 @@ public class BuildLevel3
 
         var hintLabel = CreateLabel(mapPanel.transform, "MapHint",
             "Top blueprint row = 1st jump in the arena.",
-            new Vector2(0f, -215f), new Vector2(320f, 36f), font, 15f, FontStyles.Normal,
+            new Vector2(0f, 14f), new Vector2(320f, 32f), font, 14f, FontStyles.Normal,
             new Color(0.75f, 0.88f, 1.0f));
+        var hintRt = hintLabel.rectTransform;
+        hintRt.anchorMin = new Vector2(0.5f, 0f);
+        hintRt.anchorMax = new Vector2(0.5f, 0f);
+        hintRt.pivot     = new Vector2(0.5f, 0f);
         hintLabel.alignment = TextAlignmentOptions.Center;
         ui.mapHintText = hintLabel;
 
         // INFO Panel (top left)
         var infoPanel = CreatePanel(canvasGo.transform, "InfoPanel",
             new Vector2(0f, 1f), new Vector2(0f, 1f),
-            new Vector2(36f, -36f), new Vector2(380f, 205f),
+            new Vector2(36f, -36f), new Vector2(420f, 250f),
             new Color(0.06f, 0.10f, 0.18f, 0.92f), rounded);
 
-        var titleLabel = CreateLabel(infoPanel.transform, "Title", "LEVEL 03",
-            new Vector2(24f, -30f), new Vector2(330f, 38f), font, 28f, FontStyles.Bold,
+        var titleLabel = CreateLabelTopLeft(infoPanel.transform, "Title", "LEVEL 03",
+            new Vector2(24f, -20f), new Vector2(372f, 34f), font, 26f, FontStyles.Bold,
             new Color(0.55f, 0.88f, 1.0f));
         titleLabel.alignment = TextAlignmentOptions.Left;
         ui.levelTitle = titleLabel;
 
-        var subLabel = CreateLabel(infoPanel.transform, "Subtitle", "UPSIDE-DOWN MEMORY",
-            new Vector2(24f, -62f), new Vector2(330f, 24f), font, 15f, FontStyles.Bold,
+        var subLabel = CreateLabelTopLeft(infoPanel.transform, "Subtitle", "UPSIDE-DOWN MEMORY",
+            new Vector2(24f, -56f), new Vector2(372f, 22f), font, 14f, FontStyles.Bold,
             new Color(0.95f, 0.80f, 0.35f));
         subLabel.alignment = TextAlignmentOptions.Left;
         ui.subtitle = subLabel;
 
-        var objLabel = CreateLabel(infoPanel.transform, "Objective",
-            "GLACIAL TRIAL: Memorize inverted blueprint & reach summit.",
-            new Vector2(24f, -100f), new Vector2(330f, 48f), font, 13.5f, FontStyles.Normal,
-            new Color(0.80f, 0.90f, 1.0f));
-        objLabel.alignment = TextAlignmentOptions.Left;
+        var objLabel = CreateLabelTopLeft(infoPanel.transform, "Objective",
+            levelData.objective,
+            new Vector2(24f, -84f), new Vector2(372f, 115f), font, 13.5f, FontStyles.Normal,
+            new Color(0.85f, 0.92f, 1.0f));
+        objLabel.alignment = TextAlignmentOptions.TopLeft;
+        objLabel.textWrappingMode = TextWrappingModes.Normal;
+        objLabel.overflowMode = TextOverflowModes.Truncate;
+        objLabel.lineSpacing = 3f;
         ui.objectiveText = objLabel;
 
         // Progress bar
@@ -1122,8 +1129,9 @@ public class BuildLevel3
         var barBgRt = barBg.GetComponent<RectTransform>();
         barBgRt.anchorMin = new Vector2(0f, 0f);
         barBgRt.anchorMax = new Vector2(1f, 0f);
+        barBgRt.pivot     = new Vector2(0.5f, 0f);
         barBgRt.sizeDelta = new Vector2(-48f, 8f);
-        barBgRt.anchoredPosition = new Vector2(0f, 20f);
+        barBgRt.anchoredPosition = new Vector2(0f, 18f);
         var barBgImg = barBg.GetComponent<Image>();
         barBgImg.color = new Color(0.12f, 0.18f, 0.28f);
         if (rounded != null) { barBgImg.sprite = rounded; barBgImg.type = Image.Type.Sliced; }
@@ -1232,6 +1240,27 @@ public class BuildLevel3
         var go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(parent, false);
         var rt = go.GetComponent<RectTransform>();
+        rt.anchoredPosition = pos;
+        rt.sizeDelta        = size;
+        var tmp = go.GetComponent<TextMeshProUGUI>();
+        tmp.text      = text;
+        tmp.font      = font;
+        tmp.fontSize  = fontSize;
+        tmp.fontStyle = style;
+        tmp.color     = color;
+        return tmp;
+    }
+
+    static TMP_Text CreateLabelTopLeft(Transform parent, string name, string text,
+        Vector2 pos, Vector2 size, TMP_FontAsset font, float fontSize,
+        FontStyles style, Color color)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
+        go.transform.SetParent(parent, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin        = new Vector2(0f, 1f);
+        rt.anchorMax        = new Vector2(0f, 1f);
+        rt.pivot            = new Vector2(0f, 1f);
         rt.anchoredPosition = pos;
         rt.sizeDelta        = size;
         var tmp = go.GetComponent<TextMeshProUGUI>();

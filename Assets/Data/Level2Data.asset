@@ -26,7 +26,7 @@ MonoBehaviour:
   - {x: 4, y: 1}
   - {x: 5, y: 3}
   - {x: 6, y: 5}
-  - {x: 7, y: 2}
+  - {x: 7, y: 4}
   sequence:
   - {x: 1, y: 2}
   - {x: 2, y: 4}
@@ -34,7 +34,7 @@ MonoBehaviour:
   - {x: 4, y: 1}
   - {x: 5, y: 3}
   - {x: 6, y: 5}
-  - {x: 7, y: 2}
+  - {x: 7, y: 4}
   objective: The desert sands hide deadly traps. Memorize the path in 5 SECONDS before it disappears, then walk the path from memory to reach the golden oasis!
   instructions: "WASD / Arrows \u2013 Move\nSpace \u2013 Jump\nRight drag / Q E \u2013 Rotate camera\nMouse wheel \u2013 Zoom\nR \u2013 Restart\nF \u2013 Dance"
   hideMapAfterCountdown: 1
