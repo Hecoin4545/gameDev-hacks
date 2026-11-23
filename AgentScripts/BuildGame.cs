@@ -589,6 +589,14 @@ public class BuildGame
         am.level2ClickClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/Level2Click.wav");
         am.level3ClickClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/Level3Click.wav");
         am.levelLockedClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/LevelLocked.wav");
+        am.bgMusicClips = new AudioClip[]
+        {
+            AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/BGMusic1.wav"),
+            AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/BGMusic2.wav"),
+            AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/BGMusic3.wav"),
+            AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/BGMusic4.wav")
+        };
+        am.ambientClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/Ambient.wav");
     }
 
     // =====================================================================

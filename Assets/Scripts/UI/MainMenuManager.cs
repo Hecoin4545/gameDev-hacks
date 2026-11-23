@@ -29,6 +29,8 @@ public class MainMenuManager : MonoBehaviour
 
         if (toastPanel != null)
             toastPanel.SetActive(false);
+
+        AudioManager.Instance?.PlayAmbient();
     }
 
     public void OnLevelClicked(int levelNumber)

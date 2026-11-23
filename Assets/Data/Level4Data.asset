@@ -31,7 +31,7 @@ MonoBehaviour:
   - {x: 3, y: 3}
   - {x: 4, y: 4}
   - {x: 5, y: 4}
-  objective: Solve the clue for each row and jump onto the correct tile. One wrong move and you must start again!
+  objective: Solve the mathematical clue for each row to find the only safe column (1, 2, 3, or 4). One wrong move drops you into the magma!
   instructions: "WASD / Arrows \u2013 Move\nSpace \u2013 Jump\nRight drag / Q E \u2013 Rotate camera\nMouse wheel \u2013 Zoom\nR \u2013 Restart\nF \u2013 Dance"
   hideMapAfterCountdown: 0
   mapVisibleDuration: 0

@@ -103,6 +103,14 @@ public class BuildScenes
         am.levelLockedClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/LevelLocked.wav");
         am.levelCompleteClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/LevelComplete.wav");
         am.buttonClickClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/ButtonClick.wav");
+        am.bgMusicClips = new AudioClip[]
+        {
+            AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/BGMusic1.wav"),
+            AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/BGMusic2.wav"),
+            AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/BGMusic3.wav"),
+            AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/BGMusic4.wav")
+        };
+        am.ambientClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/Ambient.wav");
     }
 
     static void UpdateBuildSettings()
@@ -112,7 +120,8 @@ public class BuildScenes
             new EditorBuildSettingsScene("Assets/Scenes/MainMenu.unity", true),
             new EditorBuildSettingsScene("Assets/Scenes/Level1.unity", true),
             new EditorBuildSettingsScene("Assets/Scenes/Level2.unity", true),
-            new EditorBuildSettingsScene("Assets/Scenes/Level3.unity", true)
+            new EditorBuildSettingsScene("Assets/Scenes/Level3.unity", true),
+            new EditorBuildSettingsScene("Assets/Scenes/Level4.unity", true)
         };
         EditorBuildSettings.scenes = scenes;
     }
@@ -1135,19 +1144,38 @@ public class BuildScenes
         var volGo = new GameObject("Global Volume");
         var vol = volGo.AddComponent<Volume>();
         vol.isGlobal = true;
-        var profile = ScriptableObject.CreateInstance<VolumeProfile>();
-        AssetDatabase.CreateAsset(profile, "Assets/Settings/SampleScene_Profile.asset");
-        vol.sharedProfile = profile;
 
+        // Load existing or create a fresh profile asset
+        string profilePath = "Assets/Settings/SampleScene_Profile.asset";
+        var profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(profilePath);
+        if (profile == null)
+        {
+            profile = ScriptableObject.CreateInstance<VolumeProfile>();
+            AssetDatabase.CreateAsset(profile, profilePath);
+        }
+        // Clear old components safely
+        foreach (var c in profile.components)
+            AssetDatabase.RemoveObjectFromAsset(c);
+        profile.components.Clear();
+
+        // Soft bloom — gentle glow, not blown out
         var bloom = profile.Add<Bloom>(true);
-        bloom.intensity.value = 0.35f;
-        bloom.threshold.value = 0.9f;
+        bloom.intensity.value = 0.28f;
+        bloom.threshold.value = 0.95f;
+        AssetDatabase.AddObjectToAsset(bloom, profile);
 
+        // Neutral ACES tonemapping for natural colours
         var tonemap = profile.Add<Tonemapping>(true);
         tonemap.mode.value = TonemappingMode.ACES;
+        AssetDatabase.AddObjectToAsset(tonemap, profile);
 
-        var shadows = profile.Add<ShadowsMidtonesHighlights>(true);
-        shadows.shadows.value = new Vector4(0.96f, 0.98f, 1.05f, -0.04f);
+        // NOTE: ShadowsMidtonesHighlights deliberately omitted — it caused a
+        // dark midtone shadow in the centre of the screen. Keep post-processing clean.
+
+        EditorUtility.SetDirty(profile);
+        AssetDatabase.SaveAssets();
+
+        vol.sharedProfile = profile;
     }
 
     static GameObject CreateIsland(string name, Transform parent, Vector3 pos,

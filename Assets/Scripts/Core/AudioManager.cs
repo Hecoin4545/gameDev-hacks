@@ -64,13 +64,13 @@ public class AudioManager : MonoBehaviour
         bgMusicSource = gameObject.AddComponent<AudioSource>();
         bgMusicSource.playOnAwake = false;
         bgMusicSource.loop = true;
-        bgMusicSource.volume = 0.45f;
+        bgMusicSource.volume = 0.25f;
 
         // Ambient source (looping)
         ambientSource = gameObject.AddComponent<AudioSource>();
         ambientSource.playOnAwake = false;
         ambientSource.loop = true;
-        ambientSource.volume = 0.25f;
+        ambientSource.volume = 0.12f;
 
         // Narrator source (non-looping, one-shot)
         narratorSource = gameObject.AddComponent<AudioSource>();
@@ -97,12 +97,13 @@ public class AudioManager : MonoBehaviour
         if (narratorLevel1 == null)   narratorLevel1   = Resources.Load<AudioClip>("Audio/NarratorLevel1");
         if (narratorLevel2 == null)   narratorLevel2   = Resources.Load<AudioClip>("Audio/NarratorLevel2");
         if (narratorLevel3 == null)   narratorLevel3   = Resources.Load<AudioClip>("Audio/NarratorLevel3");
-        if (bgMusicClips == null || bgMusicClips.Length == 0)
+        if (bgMusicClips == null || bgMusicClips.Length < 4)
         {
-            bgMusicClips = new AudioClip[3];
+            bgMusicClips = new AudioClip[4];
             bgMusicClips[0] = Resources.Load<AudioClip>("Audio/BGMusic1");
             bgMusicClips[1] = Resources.Load<AudioClip>("Audio/BGMusic2");
             bgMusicClips[2] = Resources.Load<AudioClip>("Audio/BGMusic3");
+            bgMusicClips[3] = Resources.Load<AudioClip>("Audio/BGMusic4");
         }
     }
 
@@ -111,14 +112,14 @@ public class AudioManager : MonoBehaviour
     public void PlayBGMusic(int levelIndex)
     {
         LoadClipsIfNeeded();
-        if (bgMusicClips == null) return;
+        if (bgMusicClips == null || bgMusicClips.Length == 0) return;
         int idx = Mathf.Clamp(levelIndex, 0, bgMusicClips.Length - 1);
         AudioClip clip = bgMusicClips[idx];
-        // Fallback: use level click clips as stand-in music if no dedicated BG track
         if (clip == null)
         {
-            AudioClip[] fallbacks = { level1ClickClip, level2ClickClip, level3ClickClip };
-            clip = fallbacks[Mathf.Clamp(levelIndex, 0, 2)];
+            // Try loading directly if not yet in array
+            clip = Resources.Load<AudioClip>("Audio/BGMusic" + (idx + 1));
+            if (clip != null) bgMusicClips[idx] = clip;
         }
         if (clip == null) return;
         if (bgMusicSource.clip == clip && bgMusicSource.isPlaying) return;
